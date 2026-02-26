@@ -26,6 +26,8 @@ import UserManagementPage from "./pages/UserManagement/index";
 
 import ClientPage from "./pages/registration/client";
 import SupplierPage from "./pages/registration/supplier";
+import ProductPage from "./pages/products/index";
+import CategoryPage from "./pages/category/index";
 
 
 
@@ -46,73 +48,75 @@ const LoadingSpinner = () => (
 export function appRoutes() {
   return (
 
-  <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<LoadingSpinner />}>
 
-    <Routes>
-          {/* Dashboard Layout */}
-          <Route element={<MasterLayout />}>
+      <Routes>
+        {/* Dashboard Layout */}
+        <Route element={<MasterLayout />}>
 
-            <Route path="master/master-dashboard" element={<MasterDashboard />} />
-            <Route path="master/client" element={<ClientPage />} />
-            <Route path="master/supplier" element={<SupplierPage />} />
-
-
-            {/* Others Page */}
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/blank" element={<Blank />} />
-
-            {/* Forms */}
-            {/* <Route path="/form-elements" element={<FormElements />} /> */}
-            
-            {/* Tables */}
-            {/* <Route path="/basic-tables" element={<BasicTables />} /> */}
-
-            {/* Ui Elements */}
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
-
-            {/* Charts */}
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
-          </Route>
+          <Route path="master/master-dashboard" element={<MasterDashboard />} />
+          <Route path="master/client" element={<ClientPage />} />
+          <Route path="master/supplier" element={<SupplierPage />} />
+          <Route path="master/products" element={<ProductPage />} />
+          <Route path="master/productcategory" element={<CategoryPage />} />
 
 
-            {/* Admin Management */}
-            {/* Create Admin */}
+          {/* Others Page */}
+          <Route path="/profile" element={<UserProfiles />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/blank" element={<Blank />} />
 
-            {/* Tables */}
+          {/* Forms */}
+          {/* <Route path="/form-elements" element={<FormElements />} /> */}
 
-            {/* Admin Management */}
-            {/* Create Admin */}
+          {/* Tables */}
+          {/* <Route path="/basic-tables" element={<BasicTables />} /> */}
 
-            {/* Tables */}
-            {/* <Route path="basic-tables" element={<BasicTables />} /> */}
+          {/* Ui Elements */}
+          <Route path="/alerts" element={<Alerts />} />
+          <Route path="/avatars" element={<Avatars />} />
+          <Route path="/badge" element={<Badges />} />
+          <Route path="/buttons" element={<Buttons />} />
+          <Route path="/images" element={<Images />} />
+          <Route path="/videos" element={<Videos />} />
 
-            {/* Ui Elements */}
-            <Route path="alerts" element={<Alerts />} />
-            <Route path="avatars" element={<Avatars />} />
-            <Route path="badge" element={<Badges />} />
-            <Route path="buttons" element={<Buttons />} />
-            <Route path="images" element={<Images />} />
-            <Route path="videos" element={<Videos />} />
+          {/* Charts */}
+          <Route path="/line-chart" element={<LineChart />} />
+          <Route path="/bar-chart" element={<BarChart />} />
+        </Route>
 
-            {/* Charts */}
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
 
-            {/* Auth Routes */}
-            <Route path="/" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
+        {/* Admin Management */}
+        {/* Create Admin */}
 
-            {/* Fallback Route */}
-            <Route path="*" element={<NotFound />} />
-    </Routes>
-  </Suspense>
+        {/* Tables */}
+
+        {/* Admin Management */}
+        {/* Create Admin */}
+
+        {/* Tables */}
+        {/* <Route path="basic-tables" element={<BasicTables />} /> */}
+
+        {/* Ui Elements */}
+        <Route path="alerts" element={<Alerts />} />
+        <Route path="avatars" element={<Avatars />} />
+        <Route path="badge" element={<Badges />} />
+        <Route path="buttons" element={<Buttons />} />
+        <Route path="images" element={<Images />} />
+        <Route path="videos" element={<Videos />} />
+
+        {/* Charts */}
+        <Route path="/line-chart" element={<LineChart />} />
+        <Route path="/bar-chart" element={<BarChart />} />
+
+        {/* Auth Routes */}
+        <Route path="/" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
+
+        {/* Fallback Route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
 
   );
 }

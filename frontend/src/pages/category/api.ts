@@ -1,0 +1,84 @@
+import { createApiUrl, getAuthHeaders, getAuthHeadersFile } from '../../access/access.ts';
+
+/**
+ * Category Interface representing the backend Category model
+ */
+export interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    image?: string;
+    created_at: string;
+}
+
+/**
+ * Fetch all categories
+ */
+export const getCategories = async (): Promise<Category[]> => {
+    const url = createApiUrl('api/categories/');
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch categories');
+    return await response.json();
+};
+
+/**
+ * Fetch a single category by ID
+ */
+export const getCategoryById = async (id: number | string): Promise<Category> => {
+    const url = createApiUrl(`api/categories/${id}/`);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Category not found');
+    return await response.json();
+};
+
+/**
+ * Create a new category (Admin only)
+ */
+export const createCategory = async (formData: FormData): Promise<Category> => {
+    const url = createApiUrl('api/categories/');
+    const headers = await getAuthHeadersFile();
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Authorization': headers['Authorization']
+        },
+        body: formData,
+    });
+
+    if (!response.ok) throw new Error('Failed to create category');
+    return await response.json();
+};
+
+/**
+ * Update an existing category
+ */
+export const updateCategory = async (id: number, data: Partial<Category>): Promise<Category> => {
+    const url = createApiUrl(`api/categories/${id}/`);
+    const headers = await getAuthHeaders();
+
+    const response = await fetch(url, {
+        method: 'PATCH',
+        headers: headers,
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) throw new Error('Failed to update category');
+    return await response.json();
+};
+
+/**
+ * Delete a category
+ */
+export const deleteCategory = async (id: number): Promise<void> => {
+    const url = createApiUrl(`api/categories/${id}/`);
+    const headers = await getAuthHeaders();
+
+    const response = await fetch(url, {
+        method: 'DELETE',
+        headers: headers,
+    });
+
+    if (!response.ok) throw new Error('Failed to delete category');
+};

@@ -1,0 +1,87 @@
+from rest_framework import serializers
+from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem
+
+# ===============================
+# 1️⃣ USER SERIALIZER
+# ===============================
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'phone', 'is_seller', 'is_customer']
+
+# ===============================
+# 2️⃣ CATEGORY SERIALIZER
+# ===============================
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+# ===============================
+# 3️⃣ PRODUCT SERIALIZER
+# ===============================
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image', 'uploaded_at']
+
+class ProductSerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many=True, read_only=True)
+    category_name = serializers.ReadOnlyField(source='category.name')
+    final_price = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'category', 'category_name', 'seller', 'name', 'slug', 
+            'description', 'price', 'discount_price', 'final_price', 
+            'stock', 'is_available', 'images', 'created_at'
+        ]
+
+# ===============================
+# 4️⃣ CART SERIALIZER
+# ===============================
+class CartItemSerializer(serializers.ModelSerializer):
+    product_details = ProductSerializer(source='product', read_only=True)
+    subtotal = serializers.ReadOnlyField(source='total_price')
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product', 'product_details', 'quantity', 'subtotal']
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True, read_only=True)
+    total_cart_price = serializers.ReadOnlyField(source='get_total_price')
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'items', 'total_cart_price', 'created_at']
+
+# ===============================
+# 5️⃣ SHIPPING ADDRESS SERIALIZER
+# ===============================
+class ShippingAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShippingAddress
+        fields = '__all__'
+
+# ===============================
+# 6️⃣ ORDER SERIALIZER
+# ===============================
+class OrderItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.ReadOnlyField(source='product.name')
+    
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'product_name', 'quantity', 'price', 'total_price']
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+    shipping_address_details = ShippingAddressSerializer(source='shipping_address', read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'order_id', 'user', 'shipping_address', 'shipping_address_details',
+            'total_amount', 'payment_method', 'status', 'is_paid', 'items', 'created_at'
+        ]
