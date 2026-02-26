@@ -54,14 +54,25 @@ export const createCategory = async (formData: FormData): Promise<Category> => {
 /**
  * Update an existing category
  */
-export const updateCategory = async (id: number, data: Partial<Category>): Promise<Category> => {
+export const updateCategory = async (id: number, data: FormData | Partial<Category>): Promise<Category> => {
     const url = createApiUrl(`api/categories/${id}/`);
-    const headers = await getAuthHeaders();
+
+    let headers: Record<string, string> = {};
+    let body: any;
+
+    if (data instanceof FormData) {
+        const authHeaders = await getAuthHeadersFile();
+        headers = { 'Authorization': authHeaders['Authorization'] };
+        body = data;
+    } else {
+        headers = await getAuthHeaders();
+        body = JSON.stringify(data);
+    }
 
     const response = await fetch(url, {
         method: 'PATCH',
         headers: headers,
-        body: JSON.stringify(data),
+        body: body,
     });
 
     if (!response.ok) throw new Error('Failed to update category');

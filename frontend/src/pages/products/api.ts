@@ -64,14 +64,25 @@ export const createProduct = async (formData: FormData): Promise<Product> => {
 /**
  * Update an existing product
  */
-export const updateProduct = async (id: number, data: Partial<Product>): Promise<Product> => {
+export const updateProduct = async (id: number, data: FormData | Partial<Product>): Promise<Product> => {
     const url = createApiUrl(`api/products/${id}/`);
-    const headers = await getAuthHeaders();
+
+    let headers: Record<string, string> = {};
+    let body: any;
+
+    if (data instanceof FormData) {
+        const authHeaders = await getAuthHeadersFile();
+        headers = { 'Authorization': authHeaders['Authorization'] };
+        body = data;
+    } else {
+        headers = await getAuthHeaders();
+        body = JSON.stringify(data);
+    }
 
     const response = await fetch(url, {
         method: 'PATCH',
         headers: headers,
-        body: JSON.stringify(data),
+        body: body,
     });
 
     if (!response.ok) throw new Error('Failed to update product');
