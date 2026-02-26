@@ -1,11 +1,14 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User, Category, Product, Cart, CartItem, ShippingAddress, Order, OrderItem
 from .serializers import (
     UserSerializer, CategorySerializer, ProductSerializer, 
-    CartSerializer, CartItemSerializer, ShippingAddressSerializer, OrderSerializer
+    CartSerializer, CartItemSerializer, ShippingAddressSerializer, OrderSerializer,
+    RegisterSerializer, MyTokenObtainPairSerializer
 )
+
 
 # --- Permissions ---
 class IsSellerOrReadOnly(permissions.BasePermission):
@@ -20,6 +23,29 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = RegisterSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                "status": "success",
+                "message": "User registered successfully",
+                "user": UserSerializer(user).data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+            "status": "error",
+            "message": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()

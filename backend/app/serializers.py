@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem
 
 # ===============================
@@ -7,7 +9,42 @@ from .models import User, Category, Product, ProductImage, Cart, CartItem, Shipp
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'phone', 'is_seller', 'is_customer']
+        fields = ['id', 'username', 'email', 'phone', 'is_seller', 'is_customer', 'first_name', 'last_name']
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    password_confirm = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'password_confirm', 'first_name', 'last_name', 'is_seller']
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            is_seller=validated_data.get('is_seller', False)
+        )
+        return user
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Add custom claims
+        token['username'] = user.username
+        token['role'] = 'master' if user.is_staff or user.is_superuser or user.is_seller else 'customer'
+        return token
+
 
 # ===============================
 # 2️⃣ CATEGORY SERIALIZER
