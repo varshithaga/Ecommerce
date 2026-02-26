@@ -27,25 +27,25 @@ const loginUser = async (credentials: LoginCredentials): Promise<LoginResponse> 
 
     const data = await response.json();
 
-    if (response.ok && data.tokens && data.tokens.access) {
-      localStorage.setItem('access', data.tokens.access);
-      localStorage.setItem('refresh', data.tokens.refresh);
-      const userRole = jwtDecode<{ role: string }>(data.tokens.access).role;
+    if (response.ok && data.access) {
+      localStorage.setItem('access', data.access);
+      localStorage.setItem('refresh', data.refresh);
+      const userRole = jwtDecode<{ role: string }>(data.access).role;
 
       return {
         success: true,
         data: data,
-        message: data.message || 'Login successful',
+        message: 'Login successful',
         userRole: userRole,
-
       };
     } else {
       return {
         success: false,
-        error: data.message || 'Invalid credentials',
+        error: data.detail || data.message || 'Invalid credentials',
         details: data
       };
     }
+
 
   } catch (error: unknown) {
     console.error('Login API Error:', error);
