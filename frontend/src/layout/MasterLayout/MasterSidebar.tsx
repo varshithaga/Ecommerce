@@ -34,23 +34,6 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     path: "/master-dashboard",
   },
-
-  // {
-  //   icon: <HelpCircle className="w-5 h-5" />,
-  //   name: "FAQ",
-  //   subItems: [
-  //     { name: "Categories", path: "/master/faqcategories" },
-  //     { name: "FAQs", path: "/master/faqs" },
-  //   ],
-  // },
-  // {
-  //   icon: <FolderKanban className="w-5 h-5" />,
-  //   name: "Services",
-  //   subItems: [
-  //     { name: "Service Categories", path: "/master/servicecategory" },
-  //     { name: "Services", path: "/master/services" },
-  //   ],
-  // },
   {
     icon: <Images className="w-5 h-5" />,
     name: "Products",
