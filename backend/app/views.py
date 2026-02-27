@@ -58,7 +58,17 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsSellerOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(seller=self.request.user)
+        product = serializer.save(seller=self.request.user)
+        self.handle_images(product)
+
+    def perform_update(self, serializer):
+        product = serializer.save()
+        self.handle_images(product)
+
+    def handle_images(self, product):
+        images = self.request.FILES.getlist('uploaded_images')
+        for image in images:
+            ProductImage.objects.create(product=product, image=image)
 
 class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer

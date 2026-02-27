@@ -74,6 +74,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'description', 'price', 'discount_price', 'final_price', 
             'stock', 'is_available', 'images', 'created_at'
         ]
+        read_only_fields = ['seller']
 
 # ===============================
 # 4️⃣ CART SERIALIZER

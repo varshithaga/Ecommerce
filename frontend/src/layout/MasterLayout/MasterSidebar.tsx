@@ -4,16 +4,8 @@ import { Link, useLocation } from "react-router";
 // Assume these icons are imported from an icon library
 import {
   LayoutDashboard,
-  FileText,
-  Users,
-  Newspaper,
-  HelpCircle,
-  Briefcase,
-  MapPin,
   UserCog,
   Images,
-  MessageCircle,
-  FolderKanban,
   ChevronDownIcon,
 } from "lucide-react"; // 👈 Example icons
 

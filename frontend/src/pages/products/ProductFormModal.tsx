@@ -20,8 +20,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
         category: '',
         is_available: true
     });
-    const [image, setImage] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [images, setImages] = useState<File[]>([]);
+    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +41,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
                 category: product.category.toString(),
                 is_available: product.is_available
             });
-            setPreviewUrl(product.images?.[0]?.image || null);
+            setPreviewUrls(product.images?.map(img => img.image) || []);
+            setImages([]);
         } else {
             setFormData({
                 name: '',
@@ -52,8 +53,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
                 category: '',
                 is_available: true
             });
-            setImage(null);
-            setPreviewUrl(null);
+            setImages([]);
+            setPreviewUrls([]);
         }
     }, [product, isOpen]);
 
@@ -64,10 +65,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setImage(file);
-            setPreviewUrl(URL.createObjectURL(file));
+        const files = Array.from(e.target.files || []);
+        if (files.length > 0) {
+            setImages(prev => [...prev, ...files]);
+            const newPreviews = files.map(file => URL.createObjectURL(file));
+            setPreviewUrls(prev => [...prev, ...newPreviews]);
         }
     };
 
@@ -86,12 +88,10 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
             data.append('category', formData.category);
             data.append('is_available', String(formData.is_available));
 
-            // For now, we handle one image as "image" field if backend supports it 
-            // product model has images FK, so we might need a specific field.
-            // Using "uploaded_images" or similar based on backend serializer
-            if (image) {
-                data.append('uploaded_images', image);
-            }
+            // Append multiple images
+            images.forEach(file => {
+                data.append('uploaded_images', file);
+            });
 
             if (product) {
                 await updateProduct(product.id, data);
@@ -215,26 +215,39 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Image</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Images</label>
                                 <div className="mt-1 flex flex-col gap-4">
-                                    <div className="w-full h-40 rounded-xl bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-200 dark:border-gray-700">
-                                        {previewUrl ? (
-                                            <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
-                                        ) : (
-                                            <div className="text-center">
-                                                <svg className="w-10 h-10 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                <p className="mt-2 text-sm text-gray-500">Click to upload image</p>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        {previewUrls.map((url, index) => (
+                                            <div key={index} className="relative aspect-square rounded-xl bg-gray-50 dark:bg-gray-800/50 overflow-hidden border border-gray-100 dark:border-gray-700">
+                                                <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPreviewUrls(prev => prev.filter((_, i) => i !== index))}
+                                                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow-sm"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
                                             </div>
-                                        )}
+                                        ))}
+
+                                        <label className="aspect-square rounded-xl bg-gray-50 dark:bg-gray-800/50 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            <span className="mt-1 text-xs text-gray-500">Add Image</span>
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept="image/*"
+                                                onChange={handleImageChange}
+                                                className="hidden"
+                                            />
+                                        </label>
                                     </div>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                        className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400 transition cursor-pointer"
-                                    />
+                                    <p className="text-xs text-gray-500">You can select multiple images at once.</p>
                                 </div>
                             </div>
 
