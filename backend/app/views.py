@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import User, Category, Product, Cart, CartItem, ShippingAddress, Order, OrderItem
+from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem
 from .serializers import (
     UserSerializer, CategorySerializer, ProductSerializer, 
     CartSerializer, CartItemSerializer, ShippingAddressSerializer, OrderSerializer,
@@ -22,7 +22,42 @@ class IsSellerOrReadOnly(permissions.BasePermission):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return User.objects.all()
+        return User.objects.filter(id=self.request.user.id)
+
+class ProfileViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        try:
+            # If user asks for their own ID or is admin, allow it
+            if pk == 'me' or str(pk) == str(request.user.id) or request.user.is_staff:
+                user = User.objects.get(id=request.user.id) if pk == 'me' else User.objects.get(pk=pk)
+                serializer = UserSerializer(user)
+                return Response(serializer.data)
+            return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def update(self, request, pk=None):
+        try:
+            if str(pk) == str(request.user.id) or request.user.is_staff:
+                user = User.objects.get(pk=pk)
+                serializer = UserSerializer(user, data=request.data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data)
+            return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
