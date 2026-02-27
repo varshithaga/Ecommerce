@@ -34,22 +34,7 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     path: "/master-dashboard",
   },
-  {
-    icon: <FileText className="w-5 h-5" />,
-    name: "Client and Supplier Registration ",
-    subItems: [
-      { name: "Client", path: "/master/client" },
-      { name: "Supplier", path: "/master/supplier" },
-    ],
-  },
-  {
-    icon: <Newspaper className="w-5 h-5" />,
-    name: "Quotation creation",
-    subItems: [
-      { name: "client", path: "/master/quotation/client" },
-      { name: "supplier", path: "/master/quotation/supplier" },
-    ],
-  },
+
   // {
   //   icon: <HelpCircle className="w-5 h-5" />,
   //   name: "FAQ",
@@ -74,33 +59,6 @@ const navItems: NavItem[] = [
       { name: "Products", path: "/master/products" },
     ],
   },
-  // {
-  //   icon: <Users className="w-5 h-5" />,
-  //   name: "Team",
-  //   subItems: [
-  //     { name: "Team Positions", path: "/master/teampositions" },
-  //     { name: "Team Members", path: "/master/teammembers" },
-  //   ],
-  // },
-  // {
-  //   icon: <MessageCircle className="w-5 h-5" />,
-  //   name: "Contact Us Requests",
-  //   path: "/master/contactus" 
-  // },
-  // {
-  //   icon: <Briefcase className="w-5 h-5" />,
-  //   name: "Career",
-  //   subItems: [
-  //     { name: "Departments", path: "/master/departments" },
-  //     { name: "Job Openings", path: "/master/jobopenings" },
-  //     { name: "Job Applications", path: "/master/jobapplications" },
-  //   ],
-  // },
-  // {
-  //   icon: <MapPin className="w-5 h-5" />,
-  //   name: "Locations",
-  //   path: "/master/locations",
-  // },
   {
     icon: <UserCog className="w-5 h-5" />,
     name: "User Management",
