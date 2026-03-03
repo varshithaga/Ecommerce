@@ -210,17 +210,132 @@ const ProductDetail: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Specifications */}
-                    {product.specifications && Object.keys(product.specifications).length > 0 && (
+                    {/* Specifications & Warranty */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-24">
+                        {/* Specifications */}
+                        {product.specifications && Object.keys(product.specifications).length > 0 && (
+                            <div>
+                                <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-8">Specifications</h3>
+                                <div className="border border-gray-100 dark:border-gray-800 rounded-[2rem] overflow-hidden">
+                                    <table className="w-full text-left">
+                                        <tbody>
+                                            {Object.entries(product.specifications).map(([key, value], idx) => (
+                                                <tr key={key} className={idx % 2 === 0 ? 'bg-gray-50/50 dark:bg-gray-900/50' : 'bg-white dark:bg-gray-950'}>
+                                                    <td className="px-6 py-4 text-xs font-black uppercase tracking-widest text-gray-400 w-1/3">{key}</td>
+                                                    <td className="px-6 py-4 text-sm font-bold text-gray-700 dark:text-gray-300">{value}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Warranty & Returns */}
                         <div>
-                            <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-8">Specifications</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-[2rem] overflow-hidden">
-                                {Object.entries(product.specifications).map(([key, value]) => (
-                                    <div key={key} className="flex bg-white dark:bg-gray-950 p-6">
-                                        <span className="w-1/3 text-xs font-black uppercase tracking-widest text-gray-400">{key}</span>
-                                        <span className="w-2/3 text-sm font-bold text-gray-700 dark:text-gray-300">{value}</span>
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-8">Warranty & Info</h3>
+                            <div className="space-y-6">
+                                {product.warranty_summary && (
+                                    <div className="p-6 bg-brand-50/50 dark:bg-brand-950/20 rounded-3xl border border-brand-100 dark:border-brand-900/30">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="w-10 h-10 bg-brand-500 text-white rounded-2xl flex items-center justify-center">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-7.618 3.033A12.006 12.006 0 002.25 10.5c0 6.627 5.373 12 12 12s12-5.373 12-12c0-2.321-.66-4.487-1.802-6.321z" /></svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black text-brand-500 uppercase tracking-widest">Warranty</p>
+                                                <p className="text-sm font-black text-gray-900 dark:text-white">{product.warranty_summary}</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4 text-xs">
+                                            {product.warranty_period && (
+                                                <div>
+                                                    <p className="text-gray-400 font-bold uppercase mb-1">Period</p>
+                                                    <p className="text-gray-900 dark:text-white font-black">{product.warranty_period}</p>
+                                                </div>
+                                            )}
+                                            {product.warranty_service_type && (
+                                                <div>
+                                                    <p className="text-gray-400 font-bold uppercase mb-1">Service</p>
+                                                    <p className="text-gray-900 dark:text-white font-black">{product.warranty_service_type}</p>
+                                                </div>
+                                            )}
+                                            {product.warranty_covered && (
+                                                <div className="col-span-2">
+                                                    <p className="text-gray-400 font-bold uppercase mb-1">Covered</p>
+                                                    <p className="text-gray-900 dark:text-white font-bold leading-relaxed">{product.warranty_covered}</p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                ))}
+                                )}
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    {product.return_policy && (
+                                        <div className="p-5 bg-gray-50 dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800">
+                                            <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Returns</p>
+                                            <p className="text-sm font-black text-gray-900 dark:text-white">{product.return_policy}</p>
+                                        </div>
+                                    )}
+                                    {product.country_of_origin && (
+                                        <div className="p-5 bg-gray-50 dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800">
+                                            <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Origin</p>
+                                            <p className="text-sm font-black text-gray-900 dark:text-white">{product.country_of_origin}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Manufacturer details footer-style card */}
+                    {(product.manufacturer_details || product.packer_details || product.importer_details) && (
+                        <div className="p-10 bg-gray-50 dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 mt-24">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-10 text-center">Manufacturer & Compliance Information</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                                {product.manufacturer_details && (
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase text-gray-400 mb-3 tracking-widest">Manufacturer</h4>
+                                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300 leading-loose">{product.manufacturer_details}</p>
+                                    </div>
+                                )}
+                                {product.packer_details && (
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase text-gray-400 mb-3 tracking-widest">Packer</h4>
+                                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300 leading-loose">{product.packer_details}</p>
+                                    </div>
+                                )}
+                                {product.importer_details && (
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase text-gray-400 mb-3 tracking-widest">Importer</h4>
+                                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300 leading-loose">{product.importer_details}</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="mt-12 pt-10 border-t border-gray-200 dark:border-gray-800 grid grid-cols-2 md:grid-cols-4 gap-8">
+                                {product.net_quantity && (
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase text-gray-400 mb-1">Net Quantity</h4>
+                                        <p className="text-xs font-black text-gray-900 dark:text-white">{product.net_quantity}</p>
+                                    </div>
+                                )}
+                                {product.product_weight && (
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase text-gray-400 mb-1">Weight</h4>
+                                        <p className="text-xs font-black text-gray-900 dark:text-white">{product.product_weight}</p>
+                                    </div>
+                                )}
+                                {product.product_dimensions && (
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase text-gray-400 mb-1">Dimensions</h4>
+                                        <p className="text-xs font-black text-gray-900 dark:text-white">{product.product_dimensions}</p>
+                                    </div>
+                                )}
+                                {product.generic_name && (
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase text-gray-400 mb-1">Generic Name</h4>
+                                        <p className="text-xs font-black text-gray-900 dark:text-white">{product.generic_name}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

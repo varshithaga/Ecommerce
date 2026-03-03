@@ -3,6 +3,39 @@ import { createApiUrl, getAuthHeaders, getAuthHeadersFile } from '../../access/a
 /**
  * Product Interface representing the backend Product model
  */
+export interface ProductImage {
+    id: number;
+    image: string;
+    alt_text?: string;
+    is_feature_image: boolean;
+    uploaded_at: string;
+}
+
+export interface ProductVariant {
+    id: number;
+    product: number;
+    name: string;
+    sku?: string;
+    price?: string;
+    stock: number;
+    image?: string;
+}
+
+export interface ProductReview {
+    id: number;
+    product: number;
+    user: number;
+    username: string;
+    rating: number;
+    comment: string;
+    image?: string;
+    is_verified_purchase: boolean;
+    created_at: string;
+}
+
+/**
+ * Product Interface representing the backend Product model
+ */
 export interface Product {
     id: number;
     category: number;
@@ -12,19 +45,64 @@ export interface Product {
     name: string;
     slug: string;
     brand: string;
+    model_name?: string;
+    model_number?: string;
+    sku?: string;
+    hsn_code?: string;
+    generic_name?: string;
+
     description: string;
     highlights: string;
-    specifications: Record<string, string>;
+    specifications: Record<string, any>;
+
     price: string; // Decimal is returned as string in JSON
     discount_price?: string;
     final_price: string;
+
     stock: number;
     is_available: boolean;
+
+    // Policy & Returns
+    return_days: number;
     return_policy: string;
+    replacement_policy: string;
     delivery_info: string;
+
+    // Warranty
+    warranty_summary?: string;
+    warranty_period?: string;
+    warranty_service_type?: string;
+    warranty_covered?: string;
+    warranty_not_covered?: string;
+
+    // Manufacturer Details
+    country_of_origin?: string;
+    manufacturer_details?: string;
+    packer_details?: string;
+    importer_details?: string;
+    net_quantity?: string;
+
+    // Dimensions
+    product_weight?: string;
+    product_dimensions?: string;
+
+    // Performance & Stats
     average_rating: string;
     review_count: number;
-    images: { id: number; image: string; uploaded_at: string }[];
+
+    // Flags
+    is_bestseller: boolean;
+    is_featured: boolean;
+    is_new: boolean;
+
+    // SEO & Marketing
+    meta_title?: string;
+    meta_description?: string;
+    video_url?: string;
+
+    images: ProductImage[];
+    variants: ProductVariant[];
+    reviews: ProductReview[];
     created_at: string;
 }
 

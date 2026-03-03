@@ -1,7 +1,10 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem
+from .models import (
+    User, Category, Product, ProductImage, ProductVariant, 
+    ProductReview, Wishlist, Cart, CartItem, ShippingAddress, Order, OrderItem
+)
 
 # ===============================
 # 1️⃣ USER SERIALIZER
@@ -89,23 +92,43 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = ['id', 'image', 'uploaded_at']
+        fields = ['id', 'image', 'alt_text', 'is_feature_image', 'uploaded_at']
+
+class ProductVariantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductVariant
+        fields = '__all__'
+
+class ProductReviewSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = ProductReview
+        fields = [
+            'id', 'product', 'user', 'username', 'rating', 'comment', 
+            'image', 'is_verified_purchase', 'created_at'
+        ]
+        read_only_fields = ['user']
 
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
+    variants = ProductVariantSerializer(many=True, read_only=True)
+    reviews = ProductReviewSerializer(many=True, read_only=True)
     category_name = serializers.ReadOnlyField(source='category.name')
     category_slug = serializers.ReadOnlyField(source='category.slug')
     final_price = serializers.ReadOnlyField()
 
     class Meta:
         model = Product
-        fields = [
-            'id', 'category', 'category_name', 'category_slug', 'seller', 'name', 'slug', 'brand',
-            'description', 'highlights', 'specifications', 'price', 'discount_price', 'final_price', 
-            'stock', 'is_available', 'return_policy', 'delivery_info', 'average_rating', 'review_count',
-            'images', 'created_at'
-        ]
-        read_only_fields = ['seller']
+        fields = '__all__'
+        read_only_fields = ['seller', 'slug', 'average_rating', 'review_count']
+
+class WishlistSerializer(serializers.ModelSerializer):
+    products = ProductSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Wishlist
+        fields = ['id', 'user', 'products', 'created_at']
 
 # ===============================
 # 4️⃣ CART SERIALIZER

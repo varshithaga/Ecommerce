@@ -132,8 +132,23 @@ const PublicProducts: React.FC = () => {
                                             <span className="px-3 py-1 bg-white/90 dark:bg-brand-500/90 backdrop-blur-sm text-[10px] font-black tracking-tighter uppercase text-gray-900 dark:text-white rounded-lg shadow-sm">
                                                 {product.category_name}
                                             </span>
+                                            {product.is_bestseller && (
+                                                <span className="px-3 py-1 bg-yellow-400 text-[10px] font-black tracking-tighter uppercase text-yellow-900 rounded-lg shadow-sm">
+                                                    Bestseller
+                                                </span>
+                                            )}
+                                            {product.is_new && (
+                                                <span className="px-3 py-1 bg-green-500 text-[10px] font-black tracking-tighter uppercase text-white rounded-lg shadow-sm">
+                                                    New
+                                                </span>
+                                            )}
+                                            {product.is_featured && (
+                                                <span className="px-3 py-1 bg-brand-500 text-[10px] font-black tracking-tighter uppercase text-white rounded-lg shadow-sm">
+                                                    Featured
+                                                </span>
+                                            )}
                                             {product.discount_price && (
-                                                <span className="px-3 py-1 bg-white/90 dark:bg-success-500/90 backdrop-blur-sm text-[10px] font-black tracking-tighter uppercase text-gray-900 dark:text-white rounded-lg shadow-sm">
+                                                <span className="px-3 py-1 bg-red-600 text-[10px] font-black tracking-tighter uppercase text-white rounded-lg shadow-sm">
                                                     Offer
                                                 </span>
                                             )}
@@ -161,13 +176,12 @@ const PublicProducts: React.FC = () => {
                                                     <span className="text-xs text-gray-400 line-through font-bold">${product.price}</span>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-1.5 opacity-50 grayscale">
-                                                <div className="flex gap-0.5">
-                                                    {[1, 2, 3, 4, 5].map(s => (
-                                                        <svg key={s} className="w-3 h-3 text-orange-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
-                                                    ))}
+                                            <div className="flex items-center gap-1.5 opacity-70">
+                                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-brand-500 rounded text-white overflow-hidden">
+                                                    <span className="text-[10px] font-black">{product.average_rating || '0.0'}</span>
+                                                    <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
                                                 </div>
-                                                <span className="text-[10px] font-black text-gray-400"> (12)</span>
+                                                <span className="text-[10px] font-black text-gray-400"> ({product.review_count || '0'})</span>
                                             </div>
                                         </div>
                                     </div>

@@ -91,9 +91,24 @@ const ProductPage: React.FC = () => {
                                 <span className="px-3 py-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-[10px] font-bold text-gray-900 dark:text-white rounded-full shadow-sm uppercase tracking-wider border border-gray-100 dark:border-gray-700">
                                     {product.category_name}
                                 </span>
+                                {product.is_bestseller && (
+                                    <span className="px-3 py-1 bg-yellow-400 text-[10px] font-bold text-yellow-900 rounded-full shadow-sm uppercase tracking-wider">
+                                        Bestseller
+                                    </span>
+                                )}
+                                {product.is_new && (
+                                    <span className="px-3 py-1 bg-green-500 text-[10px] font-bold text-white rounded-full shadow-sm uppercase tracking-wider">
+                                        New Arrival
+                                    </span>
+                                )}
+                                {product.is_featured && (
+                                    <span className="px-3 py-1 bg-indigo-500 text-[10px] font-bold text-white rounded-full shadow-sm uppercase tracking-wider">
+                                        Featured
+                                    </span>
+                                )}
                             </div>
                             {product.discount_price && (
-                                <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg animate-pulse">
+                                <span className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg">
                                     OFFER
                                 </span>
                             )}
