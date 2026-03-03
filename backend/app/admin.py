@@ -35,7 +35,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(ShippingAddress)
 class ShippingAddressAdmin(admin.ModelAdmin):
-    list_display = ['user', 'full_name', 'city', 'state', 'country']
+    list_display = ['user', 'city', 'state', 'country', 'is_default']
 
 admin.site.register(OrderItem)
 admin.site.register(CartItem)

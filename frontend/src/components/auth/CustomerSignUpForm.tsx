@@ -3,15 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { registerUser } from "./signupApi.ts";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 
-// Form data interface including Shipping Address
 interface CustomerFormData {
     first_name: string;
     last_name: string;
     email: string;
-    full_name: string;
     phone_address: string;
     address_line: string;
     city: string;
@@ -28,7 +25,6 @@ export default function CustomerSignUpForm() {
         first_name: '',
         last_name: '',
         email: '',
-        full_name: '',
         phone_address: '',
         address_line: '',
         city: '',
@@ -49,7 +45,6 @@ export default function CustomerSignUpForm() {
             !formData.first_name ||
             !formData.last_name ||
             !formData.email ||
-            !formData.full_name ||
             !formData.address_line ||
             !formData.city
         ) {
@@ -104,8 +99,6 @@ export default function CustomerSignUpForm() {
                     </p>
                 </div>
 
-                <ToastContainer position="top-center" autoClose={3000} />
-
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Account Information */}
                     <div className="bg-gray-50/50 dark:bg-white/5 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 space-y-5">
@@ -129,10 +122,6 @@ export default function CustomerSignUpForm() {
                     {/* Shipping Information */}
                     <div className="bg-gray-50/50 dark:bg-white/5 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 space-y-5">
                         <h3 className="text-xs font-black text-brand-500 uppercase tracking-widest px-1">2. Delivery Address</h3>
-                        <div>
-                            <Label>Full Name for Delivery <span className="text-error-500">*</span></Label>
-                            <Input type="text" name="full_name" placeholder="John Doe" value={formData.full_name} onChange={handleInputChange} />
-                        </div>
                         <div>
                             <Label>Contact Phone</Label>
                             <Input type="text" name="phone_address" placeholder="+1 234 567 890" value={formData.phone_address} onChange={handleInputChange} />
@@ -172,7 +161,7 @@ export default function CustomerSignUpForm() {
                     </button>
 
                     <p className="text-center text-sm font-bold text-gray-500">
-                        Already have an account? <Link to="/signin" className="text-brand-500 hover:underline">Sign In</Link>
+                        Already have an account? <Link to="/customer-login" className="text-brand-500 hover:underline">Sign In</Link>
                     </p>
                 </form>
             </div>

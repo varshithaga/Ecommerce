@@ -19,7 +19,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True)
 
     # Optional Shipping Address Fields for Customer Registration
-    full_name = serializers.CharField(required=False, allow_blank=True)
     phone_address = serializers.CharField(required=False, allow_blank=True)
     address_line = serializers.CharField(required=False, allow_blank=True)
     city = serializers.CharField(required=False, allow_blank=True)
@@ -31,7 +30,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'username', 'email', 'password', 'password_confirm', 'first_name', 'last_name', 'is_seller',
-            'full_name', 'phone_address', 'address_line', 'city', 'state', 'postal_code', 'country'
+            'phone_address', 'address_line', 'city', 'state', 'postal_code', 'country'
         ]
 
     def validate(self, attrs):
@@ -44,7 +43,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         
         # Extract address data
         address_data = {
-            'full_name': validated_data.pop('full_name', ''),
             'phone': validated_data.pop('phone_address', ''),
             'address_line': validated_data.pop('address_line', ''),
             'city': validated_data.pop('city', ''),

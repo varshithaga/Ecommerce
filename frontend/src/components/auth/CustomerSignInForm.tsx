@@ -4,8 +4,7 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 import loginUser from "./signinApi";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 
 export default function CustomerSignInForm() {
     const [email, setEmail] = useState("");
@@ -47,8 +46,6 @@ export default function CustomerSignInForm() {
 
     return (
         <div className="flex flex-col flex-1 w-full max-w-md mx-auto">
-            <ToastContainer position="top-right" autoClose={3000} />
-
             <div className="mb-8">
                 <h1 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-2">
                     Login to <span className="text-brand-500">Shop</span>
