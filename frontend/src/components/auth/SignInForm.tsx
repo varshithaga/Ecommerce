@@ -37,15 +37,9 @@ export default function SignInForm() {
       if (result.success) {
         toast.success('Login successful! Redirecting...');
         // Redirect to dashboard after successful login
-        if (result.userRole === 'customer') {
-          setTimeout(() => {
-            navigate("/"); // Go to main website for customers
-          }, 1000);
-        } else {
-          setTimeout(() => {
-            navigate("master/master-dashboard"); // Go to dashboard for sellers/staff
-          }, 1000);
-        }
+        setTimeout(() => {
+          navigate("/master/master-dashboard"); // Absolute path fixes 'signin/master/master-dashboard' error
+        }, 1000);
       } else {
         toast.error(result.error)
       }

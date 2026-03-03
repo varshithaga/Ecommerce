@@ -6,8 +6,30 @@ const PublicHeader: React.FC = () => {
     const [user, setUser] = useState<{ first_name: string; last_name: string; email: string } | null>(null);
     const navigate = useNavigate();
     const isLoggedIn = !!localStorage.getItem('access');
+    const [cartCount, setCartCount] = useState(0);
 
     useEffect(() => {
+        const fetchCartData = async () => {
+            const token = localStorage.getItem('access');
+            if (!token) return;
+            try {
+                const response = await fetch(createApiUrl('api/cart/'), {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    // data is an array of carts for this user (or a single cart object depending on API)
+                    // In our case, CartViewSet returns a queryset of carts (usually just 1)
+                    if (data.length > 0) {
+                        const items = data[0].items || [];
+                        setCartCount(items.length);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching cart:', error);
+            }
+        };
+
         const fetchProfile = async () => {
             const token = localStorage.getItem('access');
             if (token) {
@@ -20,6 +42,7 @@ const PublicHeader: React.FC = () => {
                     if (response.ok) {
                         const data = await response.json();
                         setUser(data);
+                        fetchCartData(); // Fetch cart once user is confirmed
                     } else if (response.status === 401) {
                         // Token expired
                         localStorage.removeItem('access');
@@ -36,6 +59,7 @@ const PublicHeader: React.FC = () => {
             fetchProfile();
         } else {
             setUser(null);
+            setCartCount(0);
         }
     }, [isLoggedIn]);
 
@@ -43,6 +67,7 @@ const PublicHeader: React.FC = () => {
         localStorage.removeItem('access');
         localStorage.removeItem('refresh');
         setUser(null);
+        setCartCount(0);
         navigate('/');
     };
 
@@ -83,9 +108,21 @@ const PublicHeader: React.FC = () => {
                             />
                         </div>
 
+                        {/* Cart Button */}
+                        <Link to="/cart" className="relative p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-brand-500 rounded-xl transition-all">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                            {cartCount > 0 && (
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-500 text-white text-[10px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-white dark:border-gray-900">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </Link>
+
                         {user ? (
-                            <div className="flex items-center gap-4">
-                                <div className="flex flex-col items-end">
+                            <div className="flex items-center gap-4 border-l border-gray-100 dark:border-gray-800 pl-4">
+                                <div className="flex flex-col items-end hidden lg:flex">
                                     <span className="text-sm font-black text-gray-900 dark:text-white leading-none">
                                         {user.first_name} {user.last_name}
                                     </span>
@@ -104,14 +141,11 @@ const PublicHeader: React.FC = () => {
                                 </button>
                             </div>
                         ) : (
-                            <>
-                                <Link to="/customer-registration" className="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-brand-500 transition-colors">
-                                    Register
-                                </Link>
-                                <Link to="/customer-login" className="px-6 py-2.5 bg-brand-500 text-white text-sm font-bold rounded-full hover:bg-brand-600 transition shadow-lg shadow-brand-100 dark:shadow-none">
+                            <div className="flex items-center gap-2">
+                                <Link to="/customer-login" className="px-6 py-2.5 bg-brand-500 text-white text-sm font-black uppercase tracking-widest rounded-full hover:bg-brand-600 transition shadow-lg shadow-brand-100 dark:shadow-none">
                                     Sign In
                                 </Link>
-                            </>
+                            </div>
                         )}
                     </div>
                 </div>

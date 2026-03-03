@@ -1,17 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { getProducts, Product } from './products/api';
+import { getProducts, Product, addToCart } from './products/api';
 import { getCategories, Category } from './category/api';
 import { useLocation, Link } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const PublicProducts: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
+    const [addingToCartId, setAddingToCartId] = useState<number | null>(null);
     const location = useLocation();
 
     // Simple way to get query params
     const query = new URLSearchParams(location.search);
     const categorySlug = query.get('category');
+
+    const handleAddToCart = async (productId: number, productName: string) => {
+        setAddingToCartId(productId);
+        try {
+            await addToCart(productId, 1);
+            toast.success(`${productName} added to bag!`);
+        } catch (err: any) {
+            toast.error(err.message || 'Error adding to bag');
+        } finally {
+            setAddingToCartId(null);
+        }
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -154,8 +169,12 @@ const PublicProducts: React.FC = () => {
                                             )}
                                         </div>
                                         <div className="absolute bottom-6 left-6 right-6 flex gap-2 translate-y-20 group-hover:translate-y-0 transition-transform duration-500">
-                                            <button className="flex-1 px-6 py-3 bg-gray-900 dark:bg-white dark:text-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-brand-500 hover:text-white transition">
-                                                Add to Bag
+                                            <button
+                                                onClick={(e) => { e.preventDefault(); handleAddToCart(product.id, product.name); }}
+                                                disabled={addingToCartId === product.id}
+                                                className="flex-1 px-6 py-3 bg-gray-900 dark:bg-white dark:text-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-brand-500 hover:text-white transition disabled:opacity-50"
+                                            >
+                                                {addingToCartId === product.id ? 'Adding...' : 'Add to Bag'}
                                             </button>
                                             <button className="w-12 h-12 bg-white text-gray-900 rounded-2xl flex items-center justify-center hover:bg-brand-500 hover:text-white transition shadow-xl">
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,6 +227,7 @@ const PublicProducts: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <ToastContainer position="bottom-right" />
         </div>
     );
 };

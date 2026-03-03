@@ -189,3 +189,25 @@ export const deleteProduct = async (id: number): Promise<void> => {
 
     if (!response.ok) throw new Error('Failed to delete product');
 };
+/**
+ * Add a product to the user's shopping cart
+ */
+export const addToCart = async (productId: number, quantity: number = 1): Promise<any> => {
+    const url = createApiUrl('api/cart/add_to_cart/');
+    const headers = await getAuthHeaders();
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+            product_id: productId,
+            quantity: quantity
+        })
+    });
+
+    if (!response.ok) {
+        if (response.status === 401) throw new Error('Please sign in to add items to your cart');
+        throw new Error('Failed to add item to cart');
+    }
+    return await response.json();
+};

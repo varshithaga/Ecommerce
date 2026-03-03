@@ -1,14 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProductById, Product } from './products/api';
+import { getProductById, Product, addToCart } from './products/api';
 import PageMeta from '../components/common/PageMeta';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ProductDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
+    const [addingToCart, setAddingToCart] = useState(false);
     const [activeImage, setActiveImage] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
+
+    const handleAddToCart = async () => {
+        if (!product) return;
+        setAddingToCart(true);
+        try {
+            await addToCart(product.id, quantity);
+            toast.success(`${product.name} added to bag!`);
+        } catch (err: any) {
+            toast.error(err.message || 'Error adding to bag');
+        } finally {
+            setAddingToCart(false);
+        }
+    };
 
     useEffect(() => {
         if (id) {
@@ -171,8 +187,12 @@ const ProductDetail: React.FC = () => {
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                            <button className="flex-1 h-16 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-500 hover:text-white transition-all shadow-xl shadow-gray-200 dark:shadow-none translate-y-0 active:translate-y-1">
-                                Add to Bag
+                            <button
+                                onClick={handleAddToCart}
+                                disabled={addingToCart}
+                                className="flex-1 h-16 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-500 hover:text-white transition-all shadow-xl shadow-gray-200 dark:shadow-none translate-y-0 active:translate-y-1 disabled:opacity-50"
+                            >
+                                {addingToCart ? 'Adding...' : 'Add to Bag'}
                             </button>
                             <button className="flex-1 h-16 bg-brand-500 text-white text-sm font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-100 dark:shadow-none translate-y-0 active:translate-y-1">
                                 Buy Now
@@ -341,6 +361,7 @@ const ProductDetail: React.FC = () => {
                     )}
                 </div>
             </div>
+            <ToastContainer position="bottom-right" />
         </div>
     );
 };

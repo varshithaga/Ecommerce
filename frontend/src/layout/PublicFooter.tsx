@@ -46,7 +46,7 @@ const PublicFooter: React.FC = () => {
                     <div>
                         <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-6">Account</h4>
                         <ul className="space-y-4">
-                            <li><Link to="/customer-login" className="text-gray-500 dark:text-gray-400 hover:text-brand-500 transition">Log In</Link></li>
+                            <li><Link to="/signin" className="text-gray-500 dark:text-gray-400 hover:text-brand-500 transition">Log In</Link></li>
                         </ul>
                     </div>
                 </div>

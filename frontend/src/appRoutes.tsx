@@ -25,6 +25,7 @@ const CustomerSignUp = lazy(() => import("./pages/AuthPages/CustomerSignUp"));
 const CustomerSignIn = lazy(() => import("./pages/AuthPages/CustomerSignIn"));
 const SellerSignIn = lazy(() => import("./pages/AuthPages/SellerSignIn"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const CartPage = lazy(() => import("./pages/CartPage"));
 
 import ClientPage from "./pages/registration/client";
 import SupplierPage from "./pages/registration/supplier";
@@ -47,6 +48,7 @@ export function appRoutes() {
           <Route path="/products" element={<PublicProducts />} />
           <Route path="/categories" element={<PublicCategories />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<CartPage />} />
         </Route>
 
         {/* Dashboard Layout */}
