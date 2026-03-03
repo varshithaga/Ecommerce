@@ -11,12 +11,19 @@ export interface Product {
     seller: number;
     name: string;
     slug: string;
+    brand: string;
     description: string;
+    highlights: string;
+    specifications: Record<string, string>;
     price: string; // Decimal is returned as string in JSON
     discount_price?: string;
     final_price: string;
     stock: number;
     is_available: boolean;
+    return_policy: string;
+    delivery_info: string;
+    average_rating: string;
+    review_count: number;
     images: { id: number; image: string; uploaded_at: string }[];
     created_at: string;
 }

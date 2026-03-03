@@ -129,11 +129,13 @@ const Home: React.FC = () => {
                         {products.map(product => (
                             <div key={product.id} className="group flex flex-col bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-3xl hover:border-brand-500/20 transition-all duration-500">
                                 <div className="h-72 relative overflow-hidden bg-gray-50 dark:bg-gray-800">
-                                    <img
-                                        src={product.images?.[0]?.image || `https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop`}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                    />
+                                    <Link to={`/product/${product.id}`}>
+                                        <img
+                                            src={product.images?.[0]?.image || `https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop`}
+                                            alt={product.name}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                        />
+                                    </Link>
                                     <div className="absolute top-6 left-6 flex flex-col gap-2">
                                         <span className="px-3 py-1 bg-white/90 dark:bg-brand-500/90 backdrop-blur-sm text-[10px] font-black tracking-tighter uppercase text-gray-900 dark:text-white rounded-lg shadow-sm">
                                             {product.category_name}
@@ -146,7 +148,9 @@ const Home: React.FC = () => {
                                     </button>
                                 </div>
                                 <div className="p-8 flex flex-col flex-1">
-                                    <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 group-hover:text-brand-500 transition-colors line-clamp-1">{product.name}</h3>
+                                    <Link to={`/product/${product.id}`}>
+                                        <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 group-hover:text-brand-500 transition-colors line-clamp-1">{product.name}</h3>
+                                    </Link>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 flex-grow line-clamp-2 leading-relaxed">{product.description}</p>
                                     <div className="flex items-center justify-between pt-6 border-t border-gray-50 dark:border-gray-800">
                                         <div className="flex flex-col">

@@ -60,13 +60,22 @@ class Product(models.Model):
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
+    brand = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField()
+    highlights = models.TextField(blank=True, help_text="Separate features with newlines")
+    specifications = models.JSONField(default=dict, blank=True)
 
     price = models.DecimalField(max_digits=10, decimal_places=2)
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     stock = models.PositiveIntegerField()
     is_available = models.BooleanField(default=True)
+    
+    return_policy = models.CharField(max_length=255, blank=True, null=True, default="7-Day Return Policy")
+    delivery_info = models.CharField(max_length=255, blank=True, null=True, default="Free Delivery in 3-5 business days")
+    
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    review_count = models.PositiveIntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
