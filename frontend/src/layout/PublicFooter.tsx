@@ -46,7 +46,7 @@ const PublicFooter: React.FC = () => {
                     <div>
                         <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-6">Account</h4>
                         <ul className="space-y-4">
-                            <li><Link to="/signin" className="text-gray-500 dark:text-gray-400 hover:text-brand-500 transition">Log In</Link></li>
+                            <li><Link to="/customer-login" className="text-gray-500 dark:text-gray-400 hover:text-brand-500 transition">Log In</Link></li>
                         </ul>
                     </div>
                 </div>
@@ -56,7 +56,7 @@ const PublicFooter: React.FC = () => {
                         &copy; 2026 E-Shop Inc. All rights reserved.
                     </p>
                     <div className="flex items-center gap-8">
-                        <Link to="/signin">
+                        <Link to="/seller-login">
                             <button className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-white dark:text-gray-900 text-white text-sm font-bold rounded-full hover:bg-brand-500 dark:hover:bg-brand-500 dark:hover:text-white transition shadow-sm">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h8m-1 6a9 9 0 110-18 9 9 0 010 18z" />

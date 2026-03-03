@@ -70,7 +70,7 @@ export default function CustomerSignUpForm() {
 
             if (result.success) {
                 toast.success("Registration successful! You can now sign in.");
-                setTimeout(() => navigate("/signin"), 2000);
+                setTimeout(() => navigate("/customer-login"), 2000);
             } else {
                 const errors = result.details;
                 if (typeof errors === "object") {

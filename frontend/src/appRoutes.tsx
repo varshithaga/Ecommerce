@@ -22,6 +22,8 @@ const Home = lazy(() => import("./pages/Home"));
 const PublicProducts = lazy(() => import("./pages/PublicProducts"));
 const PublicCategories = lazy(() => import("./pages/PublicCategories"));
 const CustomerSignUp = lazy(() => import("./pages/AuthPages/CustomerSignUp"));
+const CustomerSignIn = lazy(() => import("./pages/AuthPages/CustomerSignIn"));
+const SellerSignIn = lazy(() => import("./pages/AuthPages/SellerSignIn"));
 
 import ClientPage from "./pages/registration/client";
 import SupplierPage from "./pages/registration/supplier";
@@ -72,6 +74,8 @@ export function appRoutes() {
         </Route>
 
         <Route path="/customer-registration" element={<CustomerSignUp />} />
+        <Route path="/customer-login" element={<CustomerSignIn />} />
+        <Route path="/seller-login" element={<SellerSignIn />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
 

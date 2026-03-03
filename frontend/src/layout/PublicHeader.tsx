@@ -1,7 +1,51 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { createApiUrl } from '../access/access.ts';
 
 const PublicHeader: React.FC = () => {
+    const [user, setUser] = useState<{ first_name: string; last_name: string; email: string } | null>(null);
+    const navigate = useNavigate();
+    const isLoggedIn = !!localStorage.getItem('access');
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const token = localStorage.getItem('access');
+            if (token) {
+                try {
+                    const response = await fetch(createApiUrl('api/profile/'), {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setUser(data);
+                    } else if (response.status === 401) {
+                        // Token expired
+                        localStorage.removeItem('access');
+                        localStorage.removeItem('refresh');
+                        setUser(null);
+                    }
+                } catch (error) {
+                    console.error('Error fetching profile:', error);
+                }
+            }
+        };
+
+        if (isLoggedIn) {
+            fetchProfile();
+        } else {
+            setUser(null);
+        }
+    }, [isLoggedIn]);
+
+    const handleLogout = () => {
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        setUser(null);
+        navigate('/');
+    };
+
     return (
         <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,12 +83,36 @@ const PublicHeader: React.FC = () => {
                             />
                         </div>
 
-                        <Link to="/customer-registration" className="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-brand-500 transition-colors">
-                            Register
-                        </Link>
-                        <Link to="/signin" className="px-6 py-2.5 bg-brand-500 text-white text-sm font-bold rounded-full hover:bg-brand-600 transition shadow-lg shadow-brand-100 dark:shadow-none">
-                            Sign In
-                        </Link>
+                        {user ? (
+                            <div className="flex items-center gap-4">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-sm font-black text-gray-900 dark:text-white leading-none">
+                                        {user.first_name} {user.last_name}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                        {user.email}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={handleLogout}
+                                    className="p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-error-500 rounded-xl transition-colors"
+                                    title="Logout"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <Link to="/customer-registration" className="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-brand-500 transition-colors">
+                                    Register
+                                </Link>
+                                <Link to="/customer-login" className="px-6 py-2.5 bg-brand-500 text-white text-sm font-bold rounded-full hover:bg-brand-600 transition shadow-lg shadow-brand-100 dark:shadow-none">
+                                    Sign In
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

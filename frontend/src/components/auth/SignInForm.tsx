@@ -37,13 +37,13 @@ export default function SignInForm() {
       if (result.success) {
         toast.success('Login successful! Redirecting...');
         // Redirect to dashboard after successful login
-        if (result.userRole === 'master') {
+        if (result.userRole === 'customer') {
           setTimeout(() => {
-            navigate("master/master-dashboard");
+            navigate("/"); // Go to main website for customers
           }, 1000);
         } else {
           setTimeout(() => {
-            navigate("/admin/master-dashboard");
+            navigate("master/master-dashboard"); // Go to dashboard for sellers/staff
           }, 1000);
         }
       } else {
