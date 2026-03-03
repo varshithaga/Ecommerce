@@ -17,28 +17,28 @@ export default function SignInForm() {
   const navigate = useNavigate();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Clear previous messages
-    
-    
+
+
     if (!username || !password) {
       toast.error("Please enter both username and password.")
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const result = await loginUser({
         username: username,
         password: password
       });
-      
+
       if (result.success) {
-        toast.success('Login successful! Redirecting...');   
+        toast.success('Login successful! Redirecting...');
         // Redirect to dashboard after successful login
-        if(result.userRole === 'master') {
-           setTimeout(() => {
+        if (result.userRole === 'master') {
+          setTimeout(() => {
             navigate("master/master-dashboard");
           }, 1000);
         } else {
@@ -74,18 +74,18 @@ export default function SignInForm() {
               Sign In
             </h1>
             <ToastContainer
-                    position="bottom-right"
-                    autoClose={3000}
-                    hideProgressBar={false}
-                    newestOnTop
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="light"
-                    className="z-[99999]"
-                  />
+              position="bottom-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+              className="z-[99999]"
+            />
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Enter your username and password to sign in!
             </p>
@@ -187,9 +187,9 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button 
-                    className="w-full" 
-                    size="sm" 
+                  <Button
+                    className="w-full"
+                    size="sm"
                     type="submit"
                     disabled={isLoading}
                   >
@@ -209,7 +209,7 @@ export default function SignInForm() {
                   Sign Up
                 </Link>
               </p>
-              
+
               {/* <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
@@ -220,7 +220,7 @@ export default function SignInForm() {
                   </span>
                 </div>
               </div> */}
-              
+
               {/* <div className="text-center">
                 <Link
                   to="/sms-login"

@@ -39,6 +39,9 @@ const PublicHeader: React.FC = () => {
                             />
                         </div>
 
+                        <Link to="/customer-registration" className="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-brand-500 transition-colors">
+                            Register
+                        </Link>
                         <Link to="/signin" className="px-6 py-2.5 bg-brand-500 text-white text-sm font-bold rounded-full hover:bg-brand-600 transition shadow-lg shadow-brand-100 dark:shadow-none">
                             Sign In
                         </Link>

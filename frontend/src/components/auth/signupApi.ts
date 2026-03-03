@@ -9,6 +9,13 @@ interface UserData {
   password: string;
   password_confirm: string;
   role: string;
+  full_name?: string;
+  phone_address?: string;
+  address_line?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
 }
 
 interface ApiResponse {
@@ -25,7 +32,7 @@ export const registerUser = async (userData: UserData): Promise<ApiResponse> => 
   try {
     console.log('Attempting to register user with data:', userData);
     console.log('API URL:', createApiUrl('api/register/'));
-    
+
     const response = await fetch(createApiUrl('api/register/'), {
       method: 'POST',
       headers: {

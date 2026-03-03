@@ -15,9 +15,21 @@ class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     password_confirm = serializers.CharField(write_only=True)
 
+    # Optional Shipping Address Fields for Customer Registration
+    full_name = serializers.CharField(required=False, allow_blank=True)
+    phone_address = serializers.CharField(required=False, allow_blank=True)
+    address_line = serializers.CharField(required=False, allow_blank=True)
+    city = serializers.CharField(required=False, allow_blank=True)
+    state = serializers.CharField(required=False, allow_blank=True)
+    postal_code = serializers.CharField(required=False, allow_blank=True)
+    country = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password_confirm', 'first_name', 'last_name', 'is_seller']
+        fields = [
+            'username', 'email', 'password', 'password_confirm', 'first_name', 'last_name', 'is_seller',
+            'full_name', 'phone_address', 'address_line', 'city', 'state', 'postal_code', 'country'
+        ]
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -25,7 +37,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        validated_data.pop('password_confirm')
+        password_confirm = validated_data.pop('password_confirm')
+        
+        # Extract address data
+        address_data = {
+            'full_name': validated_data.pop('full_name', ''),
+            'phone': validated_data.pop('phone_address', ''),
+            'address_line': validated_data.pop('address_line', ''),
+            'city': validated_data.pop('city', ''),
+            'state': validated_data.pop('state', ''),
+            'postal_code': validated_data.pop('postal_code', ''),
+            'country': validated_data.pop('country', '')
+        }
+
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
@@ -34,6 +58,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name', ''),
             is_seller=validated_data.get('is_seller', False)
         )
+
+        # If any address field is provided, create the address
+        if any(address_data.values()):
+            ShippingAddress.objects.create(user=user, is_default=True, **address_data)
+            
         return user
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

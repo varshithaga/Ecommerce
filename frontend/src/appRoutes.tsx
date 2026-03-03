@@ -21,6 +21,7 @@ const Blank = lazy(() => import("./pages/Blank"));
 const Home = lazy(() => import("./pages/Home"));
 const PublicProducts = lazy(() => import("./pages/PublicProducts"));
 const PublicCategories = lazy(() => import("./pages/PublicCategories"));
+const CustomerSignUp = lazy(() => import("./pages/AuthPages/CustomerSignUp"));
 
 import ClientPage from "./pages/registration/client";
 import SupplierPage from "./pages/registration/supplier";
@@ -70,7 +71,7 @@ export function appRoutes() {
           <Route path="/bar-chart" element={<BarChart />} />
         </Route>
 
-        {/* Auth Routes */}
+        <Route path="/customer-registration" element={<CustomerSignUp />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
 
