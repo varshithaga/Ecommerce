@@ -40,8 +40,10 @@ const OrdersPage: React.FC = () => {
                 });
                 if (response.ok) {
                     const data = await response.json();
+                    // Handle paginated response
+                    const results = Array.isArray(data) ? data : (data.results || []);
                     // Sort orders by most recent
-                    const sortedOrders = data.sort((a: any, b: any) =>
+                    const sortedOrders = results.sort((a: any, b: any) =>
                         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                     );
                     setOrders(sortedOrders);
@@ -58,7 +60,8 @@ const OrdersPage: React.FC = () => {
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
             case 'pending': return 'bg-yellow-500/10 text-yellow-600';
-            case 'completed': return 'bg-green-500/10 text-green-600';
+            case 'completed':
+            case 'delivered': return 'bg-green-500/10 text-green-600';
             case 'cancelled': return 'bg-red-500/10 text-red-600';
             default: return 'bg-blue-500/10 text-blue-600';
         }

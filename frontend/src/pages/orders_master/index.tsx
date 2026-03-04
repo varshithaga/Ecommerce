@@ -128,8 +128,8 @@ const MasterOrders: React.FC = () => {
                         <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
                     </form>
 
-                    <div className="flex items-center gap-2 bg-white dark:bg-gray-900 p-1.5 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm">
-                        {["all", "Pending", "Delivered"].map((status) => (
+                    <div className="flex items-center gap-2 bg-white dark:bg-gray-900 p-1.5 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
+                        {["all", "Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"].map((status) => (
                             <button
                                 key={status}
                                 onClick={() => { setStatusFilter(status); setCurrentPage(1); }}
