@@ -56,7 +56,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
 
     useEffect(() => {
         // Fetch categories for the dropdown
-        getCategories().then(setCategories).catch(console.error);
+        getCategories().then(data => setCategories(data.results)).catch(console.error);
     }, []);
 
     useEffect(() => {

@@ -9,7 +9,7 @@ const PublicCategories: React.FC = () => {
     useEffect(() => {
         getCategories()
             .then(data => {
-                setCategories(data);
+                setCategories(data.results);
                 setLoading(false);
             })
             .catch(err => {

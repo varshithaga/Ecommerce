@@ -13,11 +13,26 @@ export interface Category {
 }
 
 /**
- * Fetch all categories
+ * Paginated Category Response
  */
-export const getCategories = async (): Promise<Category[]> => {
-    const url = createApiUrl('api/categories/');
-    const response = await fetch(url);
+export interface PaginatedCategoryResponse {
+    results: Category[];
+    count: number;
+    next: number | null;
+    previous: number | null;
+    current_page: number;
+    total_pages: number;
+}
+
+/**
+ * Fetch all categories (with search and pagination)
+ */
+export const getCategories = async (search: string = "", page: number = 1): Promise<PaginatedCategoryResponse> => {
+    const url = new URL(createApiUrl('api/categories/'));
+    if (search) url.searchParams.append('search', search);
+    url.searchParams.append('page', page.toString());
+
+    const response = await fetch(url.toString());
     if (!response.ok) throw new Error('Failed to fetch categories');
     return await response.json();
 };

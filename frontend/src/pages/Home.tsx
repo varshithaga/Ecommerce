@@ -11,8 +11,8 @@ const Home: React.FC = () => {
     useEffect(() => {
         Promise.all([getCategories(), getProducts()])
             .then(([catData, prodData]) => {
-                setCategories(catData.slice(0, 4));
-                setProducts(prodData.slice(0, 8));
+                setCategories(catData.results.slice(0, 4));
+                setProducts(prodData.results.slice(0, 8));
                 setLoading(false);
             })
             .catch(err => {

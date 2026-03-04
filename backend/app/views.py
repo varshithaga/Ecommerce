@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q, Count, Sum
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem
 from .serializers import (
@@ -16,6 +18,23 @@ class IsSellerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user.is_authenticated and request.user.is_seller
+
+# --- Pagination ---
+class Pagination(PageNumberPagination):
+    page_query_param = "page"
+    page_size_query_param = "limit"
+    page_size = 10
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response({
+            "count": self.page.paginator.count,
+            "next": self.page.next_page_number() if self.page.has_next() else None,
+            "previous": self.page.previous_page_number() if self.page.has_previous() else None,
+            "current_page": self.page.number,
+            "total_pages": self.page.paginator.num_pages,
+            "results": data,
+        })
 
 # --- ViewSets ---
 
@@ -86,11 +105,47 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsSellerOrReadOnly]
+    pagination_class = Pagination
+
+    def get_queryset(self):
+        queryset = Category.objects.all()
+        search = self.request.query_params.get("search")
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(slug__icontains=search) |
+                Q(description__icontains=search)
+            )
+        return queryset.order_by("name")
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsSellerOrReadOnly]
+    pagination_class = Pagination
+
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        search = self.request.query_params.get("search")
+        category = self.request.query_params.get("category")
+
+        if category and category.lower() != "all":
+            if category.isdigit():
+                queryset = queryset.filter(category_id=category)
+            else:
+                queryset = queryset.filter(
+                    Q(category__name__icontains=category) |
+                    Q(category__slug__icontains=category)
+                )
+
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(description__icontains=search) |
+                Q(model_name__icontains=search) |
+                Q(brand__name__icontains=search)
+            )
+        return queryset.order_by("-created_at")
 
     def perform_create(self, serializer):
         product = serializer.save(seller=self.request.user)
@@ -145,11 +200,65 @@ class ShippingAddressViewSet(viewsets.ModelViewSet):
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = Pagination
 
     def get_queryset(self):
-        if self.request.user.is_staff or self.request.user.is_seller:
-            return Order.objects.all()
-        return Order.objects.filter(user=self.request.user)
+        queryset = Order.objects.all()
+        user = self.request.user
+        
+        if not (user.is_staff or user.is_seller):
+            queryset = queryset.filter(user=user)
+
+        # Apply search and status filtering
+        search = self.request.query_params.get("search")
+        status_filter = self.request.query_params.get("status")
+
+        if status_filter and status_filter.lower() != "all":
+            queryset = queryset.filter(status=status_filter)
+
+        if search:
+            queryset = queryset.filter(
+                Q(order_id__icontains=search) |
+                Q(user__username__icontains=search) |
+                Q(status__icontains=search) |
+                Q(total_amount__icontains=search)
+            )
+
+        return queryset.order_by("-created_at")
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        limit = request.query_params.get("limit")
+
+        # Calculate status counts for the sidebar/tabs
+        status_counts = (
+            queryset.values("status")
+            .annotate(count=Count("id"))
+            .order_by()
+        )
+        status_summary = {entry["status"]: entry["count"] for entry in status_counts}
+
+        if limit and str(limit).lower() == "all":
+            serializer = self.get_serializer(queryset, many=True)
+            return Response({
+                "count": queryset.count(),
+                "status_counts": status_summary,
+                "results": serializer.data
+            })
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            paginated_response = self.get_paginated_response(serializer.data)
+            paginated_response.data["status_counts"] = status_summary
+            return paginated_response
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "count": queryset.count(),
+            "status_counts": status_summary,
+            "results": serializer.data
+        })
 
     def perform_create(self, serializer):
         # Professional Checkout Logic:

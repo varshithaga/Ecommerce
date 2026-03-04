@@ -107,11 +107,27 @@ export interface Product {
 }
 
 /**
- * Fetch all products
+ * Paginated Product Response
  */
-export const getProducts = async (): Promise<Product[]> => {
-    const url = createApiUrl('api/products/');
-    const response = await fetch(url);
+export interface PaginatedProductResponse {
+    results: Product[];
+    count: number;
+    next: number | null;
+    previous: number | null;
+    current_page: number;
+    total_pages: number;
+}
+
+/**
+ * Fetch all products (with search, category, and pagination)
+ */
+export const getProducts = async (search: string = "", page: number = 1, category: string = ""): Promise<PaginatedProductResponse> => {
+    const url = new URL(createApiUrl('api/products/'));
+    if (search) url.searchParams.append('search', search);
+    if (category) url.searchParams.append('category', category);
+    url.searchParams.append('page', page.toString());
+
+    const response = await fetch(url.toString());
     if (!response.ok) throw new Error('Failed to fetch products');
     return await response.json();
 };
