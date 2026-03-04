@@ -4,11 +4,11 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, Count, Sum
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem
+from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem, ProductReview
 from .serializers import (
     UserSerializer, CategorySerializer, ProductSerializer, 
     CartSerializer, CartItemSerializer, ShippingAddressSerializer, OrderSerializer,
-    RegisterSerializer, MyTokenObtainPairSerializer
+    RegisterSerializer, MyTokenObtainPairSerializer, ProductReviewSerializer
 )
 
 
@@ -286,3 +286,17 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         # Clear cart
         cart_items.delete()
+
+class ProductReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ProductReviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        queryset = ProductReview.objects.all()
+        product_id = self.request.query_params.get('product')
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

@@ -3,13 +3,14 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     UserViewSet, CategoryViewSet, ProductViewSet, 
     CartViewSet, ShippingAddressViewSet, OrderViewSet,
-    ProfileViewSet, RegisterView, MyTokenObtainPairView
+    ProfileViewSet, RegisterView, MyTokenObtainPairView, ProductReviewViewSet
 )
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'categories', CategoryViewSet)
 router.register(r'products', ProductViewSet)
+router.register(r'reviews', ProductReviewViewSet, basename='review')
 router.register(r'cart', CartViewSet, basename='cart')
 router.register(r'addresses', ShippingAddressViewSet, basename='address')
 router.register(r'orders', OrderViewSet, basename='order')

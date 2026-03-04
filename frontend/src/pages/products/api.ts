@@ -227,3 +227,30 @@ export const addToCart = async (productId: number, quantity: number = 1): Promis
     }
     return await response.json();
 };
+
+/**
+ * Submit a product review
+ */
+export const submitReview = async (productId: number, rating: number, comment: string): Promise<ProductReview> => {
+    const url = createApiUrl('api/reviews/');
+    const headers = await getAuthHeaders();
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+            product: productId,
+            rating: rating,
+            comment: comment
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 400 && errorData.non_field_errors) {
+            throw new Error('You have already reviewed this product.');
+        }
+        throw new Error(errorData.detail || 'Failed to submit review');
+    }
+    return await response.json();
+};
