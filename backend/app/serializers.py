@@ -154,6 +154,7 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShippingAddress
         fields = '__all__'
+        read_only_fields = ['user']
 
 # ===============================
 # 6️⃣ ORDER SERIALIZER
@@ -175,3 +176,4 @@ class OrderSerializer(serializers.ModelSerializer):
             'id', 'order_id', 'user', 'shipping_address', 'shipping_address_details',
             'total_amount', 'payment_method', 'status', 'is_paid', 'items', 'created_at'
         ]
+        read_only_fields = ['user', 'total_amount']

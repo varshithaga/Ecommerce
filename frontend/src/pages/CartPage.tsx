@@ -7,14 +7,16 @@ import 'react-toastify/dist/ReactToastify.css';
 
 interface CartItem {
     id: number;
-    product: {
+    product: number;
+    product_details: {
         id: number;
         name: string;
         price: string;
-        final_price: string;
+        final_price: number;
         images: { image: string }[];
     };
     quantity: number;
+    subtotal: number;
 }
 
 const CartPage: React.FC = () => {
@@ -59,7 +61,7 @@ const CartPage: React.FC = () => {
         </div>
     );
 
-    const totalPrice = cartItems.reduce((acc: number, item: CartItem) => acc + (parseFloat(item.product.final_price) * item.quantity), 0);
+    const totalPrice = cartItems.reduce((acc: number, item: CartItem) => acc + (item.product_details.final_price * item.quantity), 0);
 
     return (
         <div className="bg-white dark:bg-gray-950 min-h-screen pb-24">
@@ -89,18 +91,20 @@ const CartPage: React.FC = () => {
                         <div className="lg:w-2/3 space-y-8">
                             {cartItems.map(item => (
                                 <div key={item.id} className="flex gap-6 p-6 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all">
-                                    <div className="w-32 h-32 flex-shrink-0 bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden">
+                                    <Link to={`/product/${item.product_details.id}`} className="w-32 h-32 flex-shrink-0 bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden hover:opacity-80 transition-opacity">
                                         <img
-                                            src={item.product.images?.[0]?.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop'}
-                                            alt={item.product.name}
+                                            src={item.product_details.images?.[0]?.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop'}
+                                            alt={item.product_details.name}
                                             className="w-full h-full object-cover"
                                         />
-                                    </div>
+                                    </Link>
                                     <div className="flex-1 flex flex-col justify-between">
                                         <div>
                                             <div className="flex justify-between items-start mb-2">
-                                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{item.product.name}</h3>
-                                                <span className="text-xl font-black text-brand-500">${item.product.final_price}</span>
+                                                <Link to={`/product/${item.product_details.id}`} className="hover:text-brand-500 transition-colors">
+                                                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{item.product_details.name}</h3>
+                                                </Link>
+                                                <span className="text-xl font-black text-brand-500">${item.product_details.final_price}</span>
                                             </div>
                                             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Qty: {item.quantity}</p>
                                         </div>
@@ -142,9 +146,9 @@ const CartPage: React.FC = () => {
                                         <span className="text-xl font-black">${totalPrice.toFixed(2)}</span>
                                     </div>
                                 </div>
-                                <button className="w-full py-5 bg-brand-500 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/20 active:translate-y-1">
+                                <Link to="/checkout" className="block w-full py-5 bg-brand-500 text-white text-center font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/20 active:translate-y-1">
                                     Checkout Now
-                                </button>
+                                </Link>
 
                                 <div className="mt-8 pt-8 border-t border-white/10 dark:border-gray-100 grid grid-cols-2 gap-4 opacity-50">
                                     <div className="flex flex-col items-center text-center">
