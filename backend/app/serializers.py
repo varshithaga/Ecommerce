@@ -169,11 +169,12 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     shipping_address_details = ShippingAddressSerializer(source='shipping_address', read_only=True)
+    customer_name = serializers.ReadOnlyField(source='user.username')
 
     class Meta:
         model = Order
         fields = [
-            'id', 'order_id', 'user', 'shipping_address', 'shipping_address_details',
+            'id', 'order_id', 'user', 'customer_name', 'shipping_address', 'shipping_address_details',
             'total_amount', 'payment_method', 'status', 'is_paid', 'items', 'created_at'
         ]
         read_only_fields = ['user', 'total_amount']

@@ -7,6 +7,7 @@ import {
   UserCog,
   Images,
   ChevronDownIcon,
+  Package,
 } from "lucide-react"; // 👈 Example icons
 
 import { HorizontaLDots } from "../../icons";
@@ -38,6 +39,11 @@ const navItems: NavItem[] = [
     icon: <UserCog className="w-5 h-5" />,
     name: "User Management",
     path: "/master/usermanagement",
+  },
+  {
+    icon: <Package className="w-5 h-5" />,
+    name: "Purchased",
+    path: "/master/orders",
   },
 ];
 const MasterSidebar: React.FC = () => {
