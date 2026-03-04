@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { createApiUrl } from '../access/access.ts';
+import { createApiUrl, getAuthHeaders } from '../access/access.ts';
 import { Link } from 'react-router-dom';
 import PageMeta from '../components/common/PageMeta';
 import { toast, ToastContainer } from 'react-toastify';
@@ -24,20 +24,19 @@ const CartPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     const fetchCart = async () => {
-        const token = localStorage.getItem('access');
-        if (!token) {
-            setLoading(false);
-            return;
-        }
         try {
+            const headers = await getAuthHeaders();
             const response = await fetch(createApiUrl('api/cart/'), {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: headers
             });
             if (response.ok) {
                 const data = await response.json();
                 if (data.length > 0) {
                     setCartItems(data[0].items || []);
                 }
+            } else if (response.status === 401) {
+                // Clear state if definitely unauthorized
+                setCartItems([]);
             }
         } catch (error) {
             console.error('Error fetching cart:', error);

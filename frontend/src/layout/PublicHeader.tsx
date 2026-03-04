@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { createApiUrl } from '../access/access.ts';
+import { createApiUrl, getAuthHeaders } from '../access/access.ts';
 
 const PublicHeader: React.FC = () => {
     const [user, setUser] = useState<{ first_name: string; last_name: string; email: string } | null>(null);
@@ -10,16 +10,13 @@ const PublicHeader: React.FC = () => {
 
     useEffect(() => {
         const fetchCartData = async () => {
-            const token = localStorage.getItem('access');
-            if (!token) return;
             try {
+                const headers = await getAuthHeaders();
                 const response = await fetch(createApiUrl('api/cart/'), {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: headers
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    // data is an array of carts for this user (or a single cart object depending on API)
-                    // In our case, CartViewSet returns a queryset of carts (usually just 1)
                     if (data.length > 0) {
                         const items = data[0].items || [];
                         setCartCount(items.length);
@@ -31,32 +28,29 @@ const PublicHeader: React.FC = () => {
         };
 
         const fetchProfile = async () => {
-            const token = localStorage.getItem('access');
-            if (token) {
-                try {
-                    const response = await fetch(createApiUrl('api/profile/'), {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        setUser(data);
-                        fetchCartData(); // Fetch cart once user is confirmed
-                    } else if (response.status === 401) {
-                        // Token expired
-                        localStorage.removeItem('access');
-                        localStorage.removeItem('refresh');
-                        setUser(null);
-                    }
-                } catch (error) {
-                    console.error('Error fetching profile:', error);
+            try {
+                const headers = await getAuthHeaders();
+                const response = await fetch(createApiUrl('api/profile/'), {
+                    headers: headers
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setUser(data);
+                    fetchCartData();
+                } else if (response.status === 401) {
+                    localStorage.removeItem('access');
+                    localStorage.removeItem('refresh');
+                    setUser(null);
+                    setCartCount(0);
                 }
+            } catch (error) {
+                console.error('Error fetching profile:', error);
             }
         };
 
         if (isLoggedIn) {
             fetchProfile();
+            fetchCartData();
         } else {
             setUser(null);
             setCartCount(0);

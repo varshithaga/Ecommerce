@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createApiUrl } from '../access/access.ts';
+import { createApiUrl, getAuthHeaders } from '../access/access.ts';
 import PageMeta from '../components/common/PageMeta';
 import { toast, ToastContainer } from 'react-toastify';
 
@@ -45,15 +45,11 @@ const CheckoutPage: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const token = localStorage.getItem('access');
-            if (!token) {
-                navigate('/customer-login');
-                return;
-            }
             try {
+                const headers = await getAuthHeaders();
                 // Fetch Cart
                 const cartRes = await fetch(createApiUrl('api/cart/'), {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: headers
                 });
                 if (cartRes.ok) {
                     const data = await cartRes.json();
@@ -68,7 +64,7 @@ const CheckoutPage: React.FC = () => {
 
                 // Fetch Addresses
                 const addrRes = await fetch(createApiUrl('api/addresses/'), {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: headers
                 });
                 if (addrRes.ok) {
                     const addrData = await addrRes.json();
@@ -81,6 +77,9 @@ const CheckoutPage: React.FC = () => {
                 }
             } catch (error) {
                 console.error('Error fetching data:', error);
+                if (error instanceof Error && error.message.includes('No refresh token')) {
+                    navigate('/customer-login');
+                }
             } finally {
                 setLoading(false);
             }
@@ -94,17 +93,12 @@ const CheckoutPage: React.FC = () => {
 
     const handleSaveAddress = async (e: React.FormEvent) => {
         e.preventDefault();
-        const token = localStorage.getItem('access');
-        if (!token) return;
-
         setSubmitting(true);
         try {
+            const headers = await getAuthHeaders();
             const addrResponse = await fetch(createApiUrl('api/addresses/'), {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify(newAddress)
             });
 
@@ -136,17 +130,12 @@ const CheckoutPage: React.FC = () => {
             return;
         }
 
-        const token = localStorage.getItem('access');
-        if (!token) return;
-
         setSubmitting(true);
         try {
+            const headers = await getAuthHeaders();
             const orderResponse = await fetch(createApiUrl('api/orders/'), {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify({
                     shipping_address: selectedAddressId,
                     payment_method: 'COD'
