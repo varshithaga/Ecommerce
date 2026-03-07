@@ -19,6 +19,7 @@ const Calendar = lazy(() => import("./pages/Calendar"));
 const MasterLayout = lazy(() => import("./layout/MasterLayout/MasterLayout"));
 const PublicLayout = lazy(() => import("./layout/PublicLayout"));
 const Blank = lazy(() => import("./pages/Blank"));
+const NotificationPage = lazy(() => import("./pages/notification/index"));
 
 const Home = lazy(() => import("./pages/Home"));
 const PublicProducts = lazy(() => import("./pages/PublicProducts"));
@@ -72,6 +73,7 @@ export function appRoutes() {
           <Route path="master/productcategory" element={<CategoryPage />} />
           <Route path="master/orders" element={<MasterOrders />} />
           <Route path="master/customers" element={<MasterCustomerList />} />
+          <Route path="master/notifications" element={<NotificationPage />} />
 
           {/* Others Page */}
           <Route path="/profile" element={<UserProfiles />} />

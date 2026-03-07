@@ -3,7 +3,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import (
     User, Category, Product, ProductImage, ProductVariant, 
-    ProductReview, Wishlist, Cart, CartItem, ShippingAddress, Order, OrderItem
+    ProductReview, Wishlist, Cart, CartItem, ShippingAddress, Order, OrderItem,
+    Notification
 )
 
 # ===============================
@@ -180,3 +181,12 @@ class OrderSerializer(serializers.ModelSerializer):
             'total_amount', 'payment_method', 'status', 'is_paid', 'items', 'cancel_reason', 'created_at'
         ]
         read_only_fields = ['user', 'total_amount']
+
+# ===============================
+# 7️⃣ NOTIFICATION SERIALIZER
+# ===============================
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'user', 'title', 'body', 'is_read', 'created_at']
+        read_only_fields = ['user', 'created_at']

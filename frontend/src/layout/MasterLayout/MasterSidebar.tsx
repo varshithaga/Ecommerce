@@ -7,7 +7,8 @@ import {
   Images,
   ChevronDownIcon,
   Package,
-  Users
+  Users,
+  Bell
 } from "lucide-react"; // 👈 Example icons
 
 import { HorizontaLDots } from "../../icons";
@@ -44,6 +45,11 @@ const navItems: NavItem[] = [
     icon: <Package className="w-5 h-5" />,
     name: "Purchased",
     path: "/master/orders",
+  },
+  {
+    icon: <Bell className="w-5 h-5" />,
+    name: "Notifications",
+    path: "/master/notifications",
   },
 ];
 const MasterSidebar: React.FC = () => {

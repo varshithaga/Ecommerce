@@ -4,12 +4,12 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, Count, Sum
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem, ProductReview
+from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem, ProductReview, Notification
 from .serializers import (
     UserSerializer, CategorySerializer, ProductSerializer, 
     CartSerializer, CartItemSerializer, ShippingAddressSerializer, OrderSerializer,
     RegisterSerializer, MyTokenObtainPairSerializer, ProductReviewSerializer,
-    WishlistSerializer
+    WishlistSerializer, NotificationSerializer
 )
 
 
@@ -519,3 +519,23 @@ class WishlistViewSet(viewsets.ModelViewSet):
         else:
             wishlist.products.add(product)
             return Response({"message": "Product added to wishlist", "in_wishlist": True}, status=status.HTTP_200_OK)
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = Pagination
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        self.get_queryset().update(is_read=True)
+        return Response({"status": "success", "message": "All notifications marked as read."})
+
+    @action(detail=True, methods=['post'])
+    def mark_as_read(self, request, pk=None):
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({"status": "success", "message": "Notification marked as read."})
