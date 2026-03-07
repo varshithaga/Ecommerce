@@ -29,6 +29,8 @@ const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage"));
+const WishlistPage = lazy(() => import("./pages/WishlistPage"));
+const CustomerProfilePage = lazy(() => import("./pages/CustomerProfilePage"));
 
 import ClientPage from "./pages/registration/client";
 import SupplierPage from "./pages/registration/supplier";
@@ -53,7 +55,9 @@ export function appRoutes() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/my-profile" element={<CustomerProfilePage />} />
         </Route>
 
         {/* Dashboard Layout */}

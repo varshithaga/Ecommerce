@@ -82,18 +82,26 @@ const MasterOrders: React.FC = () => {
         setCurrentPage(1);
     };
 
-    const markAsDelivered = async (orderId: number) => {
+    const updateOrderStatus = async (orderId: number, newStatus: string) => {
         try {
             const headers = await getAuthHeaders();
             const response = await fetch(createApiUrl(`api/orders/${orderId}/`), {
                 method: 'PATCH',
-                headers: headers,
-                body: JSON.stringify({ status: 'Delivered' })
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
             });
 
             if (response.ok) {
-                toast.success("Order marked as delivered!");
+                toast.success(`Order marked as ${newStatus}!`);
                 fetchOrders();
+
+                // Update selected order if modal is open
+                if (selectedOrder && selectedOrder.id === orderId) {
+                    setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+                }
             } else {
                 toast.error("Failed to update status");
             }
@@ -209,14 +217,21 @@ const MasterOrders: React.FC = () => {
                                                 >
                                                     <Eye className="w-5 h-5" />
                                                 </button>
-                                                {order.status !== 'Delivered' && (
-                                                    <button
-                                                        onClick={() => markAsDelivered(order.id)}
-                                                        className="px-6 py-2.5 bg-brand-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-600 transition shadow-lg shadow-brand-100"
-                                                    >
-                                                        Deliver
-                                                    </button>
-                                                )}
+                                                <select
+                                                    value={order.status}
+                                                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                                                    className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm outline-none border border-transparent hover:border-brand-500/20 cursor-pointer ${order.status === 'Delivered' ? 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400'
+                                                            : order.status === 'Cancelled' ? 'bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-400'
+                                                                : 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
+                                                        }`}
+                                                >
+                                                    <option value="Pending">Pending</option>
+                                                    <option value="Processing">Processing</option>
+                                                    <option value="Shipped">Shipped</option>
+                                                    <option value="Out for Delivery">Out For Delivery</option>
+                                                    <option value="Delivered">Delivered</option>
+                                                    <option value="Cancelled">Cancelled</option>
+                                                </select>
                                             </div>
                                         </td>
                                     </tr>
@@ -371,9 +386,9 @@ const MasterOrders: React.FC = () => {
                                 >
                                     Dismiss
                                 </button>
-                                {selectedOrder.status !== 'Delivered' && (
+                                {selectedOrder.status !== 'Delivered' && selectedOrder.status !== 'Cancelled' && (
                                     <button
-                                        onClick={() => { markAsDelivered(selectedOrder.id); setSelectedOrder(null); }}
+                                        onClick={() => { updateOrderStatus(selectedOrder.id, 'Delivered'); setSelectedOrder(null); }}
                                         className="px-10 py-4 bg-brand-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-600 transition shadow-xl shadow-brand-100"
                                     >
                                         Mark as Delivered

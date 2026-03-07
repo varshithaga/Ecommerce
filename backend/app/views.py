@@ -8,7 +8,8 @@ from .models import User, Category, Product, ProductImage, Cart, CartItem, Shipp
 from .serializers import (
     UserSerializer, CategorySerializer, ProductSerializer, 
     CartSerializer, CartItemSerializer, ShippingAddressSerializer, OrderSerializer,
-    RegisterSerializer, MyTokenObtainPairSerializer, ProductReviewSerializer
+    RegisterSerializer, MyTokenObtainPairSerializer, ProductReviewSerializer,
+    WishlistSerializer
 )
 
 
@@ -78,6 +79,19 @@ class ProfileViewSet(viewsets.ViewSet):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def change_password(self, request):
+        user = request.user
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+        
+        if not user.check_password(old_password):
+            return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user.set_password(new_password)
+        user.save()
+        return Response({"status": "success", "message": "Password updated successfully"})
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
@@ -128,6 +142,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         queryset = Product.objects.all()
         search = self.request.query_params.get("search")
         category = self.request.query_params.get("category")
+        min_price = self.request.query_params.get("min_price")
+        max_price = self.request.query_params.get("max_price")
+        brand = self.request.query_params.get("brand")
+        sort = self.request.query_params.get("sort")
 
         if category and category.lower() != "all":
             if category.isdigit():
@@ -145,7 +163,31 @@ class ProductViewSet(viewsets.ModelViewSet):
                 Q(model_name__icontains=search) |
                 Q(brand__name__icontains=search)
             )
+
+        if min_price:
+            queryset = queryset.filter(price__gte=min_price)
+        if max_price:
+            queryset = queryset.filter(price__lte=max_price)
+        if brand:
+            queryset = queryset.filter(brand__name__icontains=brand)
+
+        if sort == 'price_asc':
+            return queryset.order_by('price')
+        elif sort == 'price_desc':
+            return queryset.order_by('-price')
+        elif sort == 'rating':
+            return queryset.order_by('-average_rating')
+        elif sort == 'newest':
+            return queryset.order_by('-created_at')
+
         return queryset.order_by("-created_at")
+
+    @action(detail=True, methods=['get'])
+    def related(self, request, pk=None):
+        product = self.get_object()
+        related_products = Product.objects.filter(category=product.category).exclude(id=product.id).order_by('?')[:4]
+        serializer = self.get_serializer(related_products, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         product = serializer.save(seller=self.request.user)
@@ -287,6 +329,36 @@ class OrderViewSet(viewsets.ModelViewSet):
         # Clear cart
         cart_items.delete()
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def dashboard_stats(self, request):
+        user = request.user
+        if not (user.is_staff or user.is_seller):
+            return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+            
+        orders = Order.objects.all()
+        
+        total_sales = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        total_orders = orders.count()
+        
+        # Recent 5 orders
+        recent_orders = orders.order_by('-created_at')[:5]
+        recent_orders_data = self.get_serializer(recent_orders, many=True).data
+        
+        # Status breakdown
+        status_counts = (
+            orders.values("status")
+            .annotate(count=Count("id"))
+            .order_by()
+        )
+        status_summary = {entry["status"]: entry["count"] for entry in status_counts}
+        
+        return Response({
+            "total_sales": total_sales,
+            "total_orders": total_orders,
+            "recent_orders": recent_orders_data,
+            "status_counts": status_summary
+        })
+
 class ProductReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ProductReviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -349,3 +421,38 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("You cannot delete someone else's review.")
         instance.delete()
+
+class WishlistViewSet(viewsets.ModelViewSet):
+    serializer_class = WishlistSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        from .models import Wishlist
+        return Wishlist.objects.filter(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        from .models import Wishlist
+        wishlist, created = Wishlist.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(wishlist)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def toggle(self, request):
+        product_id = request.data.get('product_id')
+        if not product_id:
+            return Response({"error": "Product ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        from .models import Wishlist
+        wishlist, created = Wishlist.objects.get_or_create(user=request.user)
+        
+        if product in wishlist.products.all():
+            wishlist.products.remove(product)
+            return Response({"message": "Product removed from wishlist", "in_wishlist": False}, status=status.HTTP_200_OK)
+        else:
+            wishlist.products.add(product)
+            return Response({"message": "Product added to wishlist", "in_wishlist": True}, status=status.HTTP_200_OK)

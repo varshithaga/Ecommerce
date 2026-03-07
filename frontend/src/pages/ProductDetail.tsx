@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProductById, Product, addToCart } from './products/api';
+import { getProductById, Product, addToCart, getRelatedProducts } from './products/api';
 import PageMeta from '../components/common/PageMeta';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Star, MessageSquare, ShieldCheck, User as UserIcon } from 'lucide-react';
+import { Star, MessageSquare, ShieldCheck, User as UserIcon, Heart } from 'lucide-react';
+import { createApiUrl } from '../access/access.ts';
 
 const ProductDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [product, setProduct] = useState<Product | null>(null);
+    const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [addingToCart, setAddingToCart] = useState(false);
     const [activeImage, setActiveImage] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
-
+    const [inWishlist, setInWishlist] = useState(false);
     const isLoggedIn = !!localStorage.getItem('access');
 
     const handleAddToCart = async () => {
@@ -29,20 +31,77 @@ const ProductDetail: React.FC = () => {
         }
     };
 
+    const handleToggleWishlist = async () => {
+        if (!isLoggedIn) {
+            toast.error("Please sign in to add to wishlist");
+            return;
+        }
+        if (!product) return;
+
+        try {
+            const token = localStorage.getItem('access');
+            const response = await fetch(createApiUrl('api/wishlist/toggle/'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ product_id: product.id })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setInWishlist(data.in_wishlist);
+                if (data.in_wishlist) {
+                    toast.success("Added to wishlist!");
+                } else {
+                    toast.success("Removed from wishlist.");
+                }
+            } else {
+                toast.error("Failed to update wishlist.");
+            }
+        } catch (error) {
+            console.error("Wishlist toggle error", error);
+            toast.error("An error occurred");
+        }
+    };
+
     useEffect(() => {
         if (id) {
+            setLoading(true);
+            window.scrollTo(0, 0); // scroll to top on navigate
             getProductById(id)
                 .then(data => {
                     setProduct(data);
                     setActiveImage(data.images?.[0]?.image || '');
                     setLoading(false);
+                    return getRelatedProducts(id);
+                })
+                .then(relatedData => {
+                    setRelatedProducts(relatedData);
                 })
                 .catch(err => {
                     console.error(err);
                     setLoading(false);
                 });
+
+            // Check wishlist status if logged in
+            if (isLoggedIn) {
+                const token = localStorage.getItem('access');
+                fetch(createApiUrl('api/wishlist/'), {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.products) {
+                            const inWish = data.products.some((p: any) => p.id === parseInt(id));
+                            setInWishlist(inWish);
+                        }
+                    })
+                    .catch(err => console.error("Could not fetch wishlist", err));
+            }
         }
-    }, [id]);
+    }, [id, isLoggedIn]);
 
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -114,9 +173,21 @@ const ProductDetail: React.FC = () => {
                                     {product.brand}
                                 </span>
                             )}
-                            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-white leading-[1.1] mb-4 uppercase tracking-tighter">
-                                {product.name}
-                            </h1>
+                            <div className="flex justify-between items-start gap-4 mb-4">
+                                <h1 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-white leading-[1.1] uppercase tracking-tighter">
+                                    {product.name}
+                                </h1>
+                                <button
+                                    onClick={handleToggleWishlist}
+                                    title="Add to Wishlist"
+                                    className={`p-3 rounded-full border-2 transition-all flex-shrink-0 ${inWishlist
+                                        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/30 text-red-500'
+                                        : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-400 hover:border-red-200 hover:text-red-500'
+                                        }`}
+                                >
+                                    <Heart className={`w-6 h-6 ${inWishlist ? 'fill-current text-red-500' : ''}`} />
+                                </button>
+                            </div>
 
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="flex items-center gap-1 px-2 py-1 bg-brand-500 rounded-lg text-white">
@@ -455,7 +526,51 @@ const ProductDetail: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <ToastContainer position="bottom-right" />
+
+            {/* Related Products Carousel */}
+            {relatedProducts.length > 0 && (
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 mt-16 lg:mt-24 border-t border-gray-100 dark:border-gray-800 pt-16">
+                    <div className="flex justify-between items-center mb-10">
+                        <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                            You Might Also <span className="text-brand-500">Like</span>
+                        </h2>
+                        <Link to={`/products?category=${product.category_slug}`} className="text-xs font-black uppercase tracking-widest text-brand-500 hover:text-brand-600 transition-colors">
+                            View Category
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {relatedProducts.map(related => (
+                            <div key={related.id} className="group bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-3xl hover:border-brand-500/20 transition-all duration-500 flex flex-col">
+                                <div className="h-64 relative overflow-hidden bg-gray-50 dark:bg-gray-800">
+                                    <Link to={`/product/${related.id}`}>
+                                        <img
+                                            src={related.images?.[0]?.image || `https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop`}
+                                            alt={related.name}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                        />
+                                    </Link>
+                                </div>
+                                <div className="p-6 flex flex-col flex-1">
+                                    <Link to={`/product/${related.id}`}>
+                                        <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 group-hover:text-brand-500 transition-colors line-clamp-1 uppercase tracking-tight">{related.name}</h3>
+                                    </Link>
+                                    <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-50 dark:border-gray-800">
+                                        <span className="text-xl font-black text-gray-900 dark:text-white">${related.final_price}</span>
+                                        <div className="flex items-center gap-1.5 opacity-70">
+                                            <div className="flex items-center gap-1 px-2 py-1 bg-brand-500 rounded-lg text-white overflow-hidden">
+                                                <span className="text-[10px] font-black tracking-widest uppercase">{related.average_rating || '5.0'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <ToastContainer position="bottom-right" theme="dark" />
         </div>
     );
 };

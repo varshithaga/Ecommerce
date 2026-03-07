@@ -121,14 +121,34 @@ export interface PaginatedProductResponse {
 /**
  * Fetch all products (with search, category, and pagination)
  */
-export const getProducts = async (search: string = "", page: number = 1, category: string = ""): Promise<PaginatedProductResponse> => {
+export const getProducts = async (
+    search: string = "",
+    page: number = 1,
+    category: string = "",
+    minPrice?: number,
+    maxPrice?: number,
+    sort?: string
+): Promise<PaginatedProductResponse> => {
     const url = new URL(createApiUrl('api/products/'));
     if (search) url.searchParams.append('search', search);
     if (category) url.searchParams.append('category', category);
+    if (minPrice) url.searchParams.append('min_price', minPrice.toString());
+    if (maxPrice) url.searchParams.append('max_price', maxPrice.toString());
+    if (sort) url.searchParams.append('sort', sort);
     url.searchParams.append('page', page.toString());
 
     const response = await fetch(url.toString());
     if (!response.ok) throw new Error('Failed to fetch products');
+    return await response.json();
+};
+
+/**
+ * Fetch related products for cross-selling
+ */
+export const getRelatedProducts = async (id: number | string): Promise<Product[]> => {
+    const url = createApiUrl(`api/products/${id}/related/`);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch related products');
     return await response.json();
 };
 

@@ -23,12 +23,16 @@ const PublicProducts: React.FC = () => {
 
     const query = new URLSearchParams(location.search);
     const categorySlug = query.get('category') || "";
+    const searchQuery = query.get('search') || "";
+
+    const [maxPrice, setMaxPrice] = useState<number>(1000);
+    const [sortOption, setSortOption] = useState<string>('newest');
 
     const fetchInitialData = useCallback(async () => {
         setInitialLoading(true);
         try {
             const [prodData, catData] = await Promise.all([
-                getProducts("", 1, categorySlug),
+                getProducts(searchQuery, 1, categorySlug, 0, maxPrice, sortOption),
                 getCategories()
             ]);
             setProducts(prodData.results);
@@ -41,7 +45,7 @@ const PublicProducts: React.FC = () => {
         } finally {
             setInitialLoading(false);
         }
-    }, [categorySlug]);
+    }, [categorySlug, searchQuery, maxPrice, sortOption]);
 
     const fetchMoreProducts = useCallback(async () => {
         if (loading || !hasMore) return;
@@ -49,7 +53,7 @@ const PublicProducts: React.FC = () => {
         setLoading(true);
         try {
             const nextPage = page + 1;
-            const data: PaginatedProductResponse = await getProducts("", nextPage, categorySlug);
+            const data: PaginatedProductResponse = await getProducts(searchQuery, nextPage, categorySlug, 0, maxPrice, sortOption);
             setProducts(prev => [...prev, ...data.results]);
             setHasMore(data.next !== null);
             setPage(nextPage);
@@ -58,7 +62,7 @@ const PublicProducts: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [page, hasMore, loading, categorySlug]);
+    }, [page, hasMore, loading, categorySlug, searchQuery, maxPrice, sortOption]);
 
     useEffect(() => {
         fetchInitialData();
@@ -131,12 +135,20 @@ const PublicProducts: React.FC = () => {
                         </div>
 
                         <div>
-                            <h2 className="text-xl font-black text-gray-900 dark:text-white mb-8 uppercase tracking-widest">Price Range</h2>
+                            <h2 className="text-xl font-black text-gray-900 dark:text-white mb-8 uppercase tracking-widest">Max Price</h2>
                             <div className="space-y-6">
-                                <input type="range" className="w-full accent-brand-500" min="0" max="1000" />
+                                <input
+                                    type="range"
+                                    className="w-full accent-brand-500"
+                                    min="0"
+                                    max="5000"
+                                    step="50"
+                                    value={maxPrice}
+                                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                                />
                                 <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                                     <span>$0</span>
-                                    <span>$1000+</span>
+                                    <span className="text-brand-500">${maxPrice}</span>
                                 </div>
                             </div>
                         </div>
@@ -156,16 +168,20 @@ const PublicProducts: React.FC = () => {
                 <div className="flex-1">
                     <div className="flex justify-between items-center mb-12">
                         <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
-                            {categorySlug ? categorySlug.replace(/-/g, ' ') : 'Our Collection'}
+                            {searchQuery ? `Search: ${searchQuery}` : categorySlug ? categorySlug.replace(/-/g, ' ') : 'Our Collection'}
                             <span className="text-brand-500 text-lg ml-4 opacity-50 font-bold tracking-tighter">({totalResults} Items)</span>
                         </h1>
                         <div className="flex items-center gap-4">
                             <span className="text-xs font-black text-gray-400 uppercase tracking-widest hidden sm:block">Sort By:</span>
-                            <select className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full px-6 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all appearance-none cursor-pointer">
-                                <option>Newest First</option>
-                                <option>Price: Low to High</option>
-                                <option>Price: High to Low</option>
-                                <option>Most Popular</option>
+                            <select
+                                value={sortOption}
+                                onChange={(e) => setSortOption(e.target.value)}
+                                className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full px-6 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all appearance-none cursor-pointer"
+                            >
+                                <option value="newest">Newest First</option>
+                                <option value="price_asc">Price: Low to High</option>
+                                <option value="price_desc">Price: High to Low</option>
+                                <option value="rating">Top Rated</option>
                             </select>
                         </div>
                     </div>
