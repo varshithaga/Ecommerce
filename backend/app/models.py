@@ -320,14 +320,54 @@ class Notification(models.Model):
         return f"{self.title} → {self.user.username}"
 
 
+# 1️⃣2️⃣ FCM DEVICE MODEL
 # ===============================
-# 1️⃣2️⃣ SIGNALS (Auto-create Cart, Wishlist & Update Rating)
+class FCMDevice(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="fcm_devices")
+    token = models.CharField(max_length=512, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.token[:20]}..."
+
+
+# ===============================
+# 1️⃣3️⃣ SIGNALS (Auto-create Cart, Wishlist & Update Rating)
 # ===============================
 @receiver(post_save, sender=User)
 def create_customer_assets(sender, instance, created, **kwargs):
     if created:
         Cart.objects.get_or_create(user=instance)
         Wishlist.objects.get_or_create(user=instance)
+
+
+@receiver(post_save, sender=Order)
+def notify_sellers_new_order(sender, instance, created, **kwargs):
+    if created:
+        from .firebase_utils import send_push_notification
+        # Find all sellers
+        sellers = User.objects.filter(is_seller=True)
+        
+        title = "New Order Received! 🚀"
+        body = f"Customer {instance.user.username} placed a new order of ${instance.total_amount}."
+        
+        for seller in sellers:
+            # 1. Create database notification
+            Notification.objects.create(
+                user=seller,
+                title=title,
+                body=body
+            )
+            
+            # 2. Send push notifications to all their devices
+            devices = seller.fcm_devices.all()
+            for device in devices:
+                send_push_notification(
+                    token=device.token,
+                    title=title,
+                    body=body,
+                    data={"order_id": str(instance.order_id)}
+                )
 
 
 @receiver(post_save, sender=ProductReview)

@@ -12,7 +12,7 @@ import {
 } from "lucide-react"; // 👈 Example icons
 
 import { HorizontaLDots } from "../../icons";
-
+import { createApiUrl, getAuthHeaders } from "../../access/access";
 import { useSidebar } from "../../context/SidebarContext";
 
 type NavItem = {
@@ -55,6 +55,36 @@ const navItems: NavItem[] = [
 const MasterSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(createApiUrl('api/notifications/'), { headers });
+        if (response.ok) {
+          const data = await response.json();
+          const notifs = data.results || data;
+          setUnreadCount(notifs.filter((n: any) => !n.is_read).length);
+        }
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    if (localStorage.getItem('access')) {
+      fetchUnreadCount();
+    }
+
+    const interval = setInterval(() => {
+      if (localStorage.getItem('access')) {
+        fetchUnreadCount();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     index: number;
@@ -138,7 +168,14 @@ const MasterSidebar: React.FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
+                  <span className="menu-item-text">
+                    {nav.name}
+                    {nav.name === "Notifications" && unreadCount > 0 && (
+                      <span className="ml-2 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </span>
                 )}
               </Link>
             )

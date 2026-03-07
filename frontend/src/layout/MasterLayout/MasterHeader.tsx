@@ -44,27 +44,42 @@ const MasterHeader: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const headers = await getAuthHeaders();
-        const response = await fetch(createApiUrl('api/notifications/'), { headers });
-        if (response.ok) {
-          const data = await response.json();
-          const notifs = data.results || data;
-          setNotifications(notifs);
-          setUnreadCount(notifs.filter((n: any) => !n.is_read).length);
-        }
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
+  const fetchNotifications = async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(createApiUrl('api/notifications/'), { headers });
+      if (response.ok) {
+        const data = await response.json();
+        const notifs = data.results || data;
+        setNotifications(notifs);
+        setUnreadCount(notifs.filter((n: any) => !n.is_read).length);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
 
-    // Check if token exists before fetching
+  useEffect(() => {
     if (localStorage.getItem('access')) {
       fetchNotifications();
     }
+
+    const interval = setInterval(() => {
+      if (localStorage.getItem('access')) {
+        fetchNotifications();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
+
+  const handleToggleNotification = () => {
+    const newState = !isNotificationOpen;
+    setIsNotificationOpen(newState);
+    if (newState) {
+      fetchNotifications();
+    }
+  };
 
   const handleMarkAllRead = async () => {
     try {
@@ -164,7 +179,7 @@ const MasterHeader: React.FC = () => {
             {/* <!-- Notification Menu Area --> */}
             <div className="relative">
               <button
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                onClick={handleToggleNotification}
                 className="relative items-center justify-center p-2.5 text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
                 title="Notifications"
               >

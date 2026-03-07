@@ -9,11 +9,6 @@ const PublicHeader: React.FC = () => {
     const [cartCount, setCartCount] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Notifications state
-    const [notifications, setNotifications] = useState<any[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
@@ -40,21 +35,6 @@ const PublicHeader: React.FC = () => {
             }
         };
 
-        const fetchNotifications = async () => {
-            try {
-                const headers = await getAuthHeaders();
-                const response = await fetch(createApiUrl('api/notifications/'), { headers });
-                if (response.ok) {
-                    const data = await response.json();
-                    const notifs = data.results || data;
-                    setNotifications(notifs);
-                    setUnreadCount(notifs.filter((n: any) => !n.is_read).length);
-                }
-            } catch (error) {
-                console.error('Error fetching notifications:', error);
-            }
-        };
-
         const fetchProfile = async () => {
             try {
                 const headers = await getAuthHeaders();
@@ -65,7 +45,6 @@ const PublicHeader: React.FC = () => {
                     const data = await response.json();
                     setUser(data);
                     fetchCartData();
-                    fetchNotifications();
                 } else if (response.status === 401) {
                     localStorage.removeItem('access');
                     localStorage.removeItem('refresh');
@@ -85,22 +64,6 @@ const PublicHeader: React.FC = () => {
             setCartCount(0);
         }
     }, [isLoggedIn]);
-
-    const handleMarkAllRead = async () => {
-        try {
-            const headers = await getAuthHeaders();
-            const response = await fetch(createApiUrl('api/notifications/mark_all_read/'), {
-                method: 'POST',
-                headers
-            });
-            if (response.ok) {
-                setNotifications(notifications.map(n => ({ ...n, is_read: true })));
-                setUnreadCount(0);
-            }
-        } catch (error) {
-            console.error('Error marking notifications read:', error);
-        }
-    };
 
     const handleLogout = () => {
         localStorage.removeItem('access');
@@ -158,62 +121,6 @@ const PublicHeader: React.FC = () => {
                             </Link>
                         )}
 
-                        {/* Notifications Dropdown */}
-                        {user && (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                                    className="relative p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-brand-500 rounded-xl transition-all"
-                                    title="Notifications"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                    </svg>
-                                    {unreadCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-white dark:border-gray-900">
-                                            {unreadCount}
-                                        </span>
-                                    )}
-                                </button>
-
-                                {isNotificationOpen && (
-                                    <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-2xl z-50 overflow-hidden transform origin-top-right transition-all">
-                                        <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
-                                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white">Notifications</h3>
-                                            {unreadCount > 0 && (
-                                                <button onClick={handleMarkAllRead} className="text-[10px] text-brand-500 hover:text-brand-600 font-bold uppercase tracking-widest transition-colors">
-                                                    Mark read
-                                                </button>
-                                            )}
-                                        </div>
-                                        <div className="max-h-80 overflow-y-auto no-scrollbar">
-                                            {notifications.length === 0 ? (
-                                                <div className="p-8 text-center">
-                                                    <p className="text-xs font-bold text-gray-400">All caught up!</p>
-                                                </div>
-                                            ) : (
-                                                <div className="divide-y divide-gray-50 dark:divide-gray-800">
-                                                    {notifications.map((notif: any) => (
-                                                        <div key={notif.id} className={`p-4 transition-colors ${notif.is_read ? 'bg-white dark:bg-gray-900' : 'bg-brand-50/50 dark:bg-brand-500/5'}`}>
-                                                            <div className="flex justify-between items-start gap-3">
-                                                                <div>
-                                                                    <p className="text-sm font-black text-gray-900 dark:text-white leading-tight mb-1">{notif.title}</p>
-                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{notif.body}</p>
-                                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">
-                                                                        {new Date(notif.created_at).toLocaleDateString()}
-                                                                    </p>
-                                                                </div>
-                                                                {!notif.is_read && <span className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0 mt-1.5"></span>}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
 
                         {/* Wishlist Button */}
                         {user && (

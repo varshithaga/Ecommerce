@@ -4,12 +4,12 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, Count, Sum
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem, ProductReview, Notification
+from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem, ProductReview, Notification, FCMDevice
 from .serializers import (
     UserSerializer, CategorySerializer, ProductSerializer, 
     CartSerializer, CartItemSerializer, ShippingAddressSerializer, OrderSerializer,
     RegisterSerializer, MyTokenObtainPairSerializer, ProductReviewSerializer,
-    WishlistSerializer, NotificationSerializer
+    WishlistSerializer, NotificationSerializer, FCMDeviceSerializer
 )
 
 
@@ -539,3 +539,17 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.is_read = True
         notification.save()
         return Response({"status": "success", "message": "Notification marked as read."})
+
+class FCMDeviceViewSet(viewsets.ModelViewSet):
+    queryset = FCMDevice.objects.all()
+    serializer_class = FCMDeviceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return FCMDevice.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Allow updating the token if it already exists by deleting the old one first or just get_or_create logic
+        token = self.request.data.get('token')
+        FCMDevice.objects.filter(token=token).delete()
+        serializer.save(user=self.request.user)

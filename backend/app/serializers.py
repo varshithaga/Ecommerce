@@ -4,7 +4,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import (
     User, Category, Product, ProductImage, ProductVariant, 
     ProductReview, Wishlist, Cart, CartItem, ShippingAddress, Order, OrderItem,
-    Notification
+    Notification, FCMDevice
 )
 
 # ===============================
@@ -189,4 +189,14 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ['id', 'user', 'title', 'body', 'is_read', 'created_at']
+        read_only_fields = ['user', 'created_at']
+
+
+# ===============================
+# 8️⃣ FCM DEVICE SERIALIZER
+# ===============================
+class FCMDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FCMDevice
+        fields = ['id', 'user', 'token', 'created_at']
         read_only_fields = ['user', 'created_at']

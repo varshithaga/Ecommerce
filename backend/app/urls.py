@@ -4,7 +4,7 @@ from .views import (
     UserViewSet, CategoryViewSet, ProductViewSet, 
     CartViewSet, ShippingAddressViewSet, OrderViewSet,
     ProfileViewSet, RegisterView, MyTokenObtainPairView, ProductReviewViewSet,
-    WishlistViewSet, NotificationViewSet
+    WishlistViewSet, NotificationViewSet, FCMDeviceViewSet
 )
 
 router = DefaultRouter()
@@ -18,6 +18,7 @@ router.register(r'addresses', ShippingAddressViewSet, basename='address')
 router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'profile', ProfileViewSet, basename='profile')
 router.register(r'notifications', NotificationViewSet, basename='notification')
+router.register(r'fcm-devices', FCMDeviceViewSet, basename='fcm-device')
 
 urlpatterns = [
     path('', include(router.urls)),
