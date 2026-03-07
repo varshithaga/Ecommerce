@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProductById, Product, addToCart, submitReview } from './products/api';
+import { getProductById, Product, addToCart } from './products/api';
 import PageMeta from '../components/common/PageMeta';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,10 +14,6 @@ const ProductDetail: React.FC = () => {
     const [activeImage, setActiveImage] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
 
-    // Review State
-    const [rating, setRating] = useState(5);
-    const [comment, setComment] = useState('');
-    const [submittingReview, setSubmittingReview] = useState(false);
     const isLoggedIn = !!localStorage.getItem('access');
 
     const handleAddToCart = async () => {
@@ -30,26 +26,6 @@ const ProductDetail: React.FC = () => {
             toast.error(err.message || 'Error adding to bag');
         } finally {
             setAddingToCart(false);
-        }
-    };
-
-    const handleSubmitReview = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!product || !comment.trim()) return;
-
-        setSubmittingReview(true);
-        try {
-            await submitReview(product.id, rating, comment);
-            toast.success("Review submitted! Thank you.");
-            setComment('');
-            setRating(5);
-            // Refresh product to show new review and updated rating
-            const updatedProduct = await getProductById(product.id);
-            setProduct(updatedProduct);
-        } catch (err: any) {
-            toast.error(err.message || "Failed to submit review");
-        } finally {
-            setSubmittingReview(false);
         }
     };
 
@@ -415,42 +391,14 @@ const ProductDetail: React.FC = () => {
                             {/* Review Form (Only for logged in users) */}
                             {isLoggedIn && (
                                 <div className="lg:col-span-4 transition-all sticky top-24 h-fit">
-                                    <div className="p-10 bg-gray-50 dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-sm">
-                                        <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-8">Share your <span className="text-brand-500">Experience.</span></h4>
-                                        <form onSubmit={handleSubmitReview} className="space-y-8">
-                                            <div>
-                                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-4">Rating</label>
-                                                <div className="flex gap-2">
-                                                    {[1, 2, 3, 4, 5].map((star) => (
-                                                        <button
-                                                            key={star}
-                                                            type="button"
-                                                            onClick={() => setRating(star)}
-                                                            className={`p-3 rounded-2xl transition-all ${rating >= star ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'bg-white dark:bg-gray-800 text-gray-300 dark:text-gray-600 border border-gray-100 dark:border-gray-700'}`}
-                                                        >
-                                                            <Star className={`w-6 h-6 ${rating >= star ? 'fill-current' : ''}`} />
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-4">Your Feedback</label>
-                                                <textarea
-                                                    required
-                                                    value={comment}
-                                                    onChange={(e) => setComment(e.target.value)}
-                                                    className="w-full p-6 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl text-sm font-medium focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all placeholder:text-gray-400 min-h-[150px] dark:text-white"
-                                                    placeholder="What did you like or dislike?"
-                                                />
-                                            </div>
-                                            <button
-                                                type="submit"
-                                                disabled={submittingReview}
-                                                className="w-full py-5 bg-brand-500 text-white text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/20 disabled:opacity-50"
-                                            >
-                                                {submittingReview ? 'Publishing...' : 'Publish Review'}
-                                            </button>
-                                        </form>
+                                    <div className="p-10 bg-gray-50 dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-sm text-center">
+                                        <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-4">Share your <span className="text-brand-500">Experience.</span></h4>
+                                        <p className="text-sm font-medium text-gray-500 mb-8 leading-relaxed">
+                                            You can only review products you have bought. To write a review, please visit your order history.
+                                        </p>
+                                        <Link to="/orders" className="w-full inline-block py-5 bg-brand-500 text-white text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/20">
+                                            View Order History
+                                        </Link>
                                     </div>
                                 </div>
                             )}
@@ -473,7 +421,9 @@ const ProductDetail: React.FC = () => {
                                                             <UserIcon className="w-7 h-7" />
                                                         </div>
                                                         <div>
-                                                            <h5 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">{review.username}</h5>
+                                                            <h5 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                                                                {review.username && review.username.includes('@') ? review.username.split('@')[0] : review.username}
+                                                            </h5>
                                                             <div className="flex items-center gap-3 mt-1">
                                                                 <div className="flex items-center gap-0.5 text-brand-500">
                                                                     {[...Array(5)].map((_, i) => (

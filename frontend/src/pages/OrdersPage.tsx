@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createApiUrl } from '../access/access.ts';
 import PageMeta from '../components/common/PageMeta';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
+import { submitReview } from './products/api';
+import { Star } from 'lucide-react';
 
 interface OrderItem {
     id: number;
+    product: number;
     product_name: string;
     quantity: number;
     price: number;
@@ -26,6 +29,55 @@ const OrdersPage: React.FC = () => {
     const navigate = useNavigate();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Review Modal State
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<{ id: number; name: string } | null>(null);
+    const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState('');
+    const [submittingReview, setSubmittingReview] = useState(false);
+
+    const handleOpenReview = async (productId: number, productName: string) => {
+        setSelectedProduct({ id: productId, name: productName });
+        setRating(5);
+        setComment('');
+
+        try {
+            const token = localStorage.getItem('access');
+            if (token) {
+                const response = await fetch(createApiUrl(`api/reviews/my_review/?product=${productId}`), {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.rating) {
+                        setRating(data.rating);
+                        setComment(data.comment || '');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching existing review:", error);
+        }
+
+        setReviewModalOpen(true);
+    };
+
+    const handleSubmitReview = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedProduct || !comment.trim()) return;
+
+        setSubmittingReview(true);
+        try {
+            await submitReview(selectedProduct.id, rating, comment);
+            toast.success("Review submitted! Thank you.");
+            setReviewModalOpen(false);
+        } catch (err: any) {
+            toast.error(err.message || "Failed to submit review");
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -148,8 +200,16 @@ const OrdersPage: React.FC = () => {
                                                         <p className="text-xs font-bold text-gray-400 mt-1">Qty: {item.quantity} × ${parseFloat(item.price.toString()).toFixed(2)}</p>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
+                                                <div className="text-right flex flex-col items-end gap-2">
                                                     <p className="text-sm font-black text-gray-900 dark:text-white font-mono">${parseFloat(item.total_price.toString()).toFixed(2)}</p>
+                                                    {order.status === 'Delivered' && (
+                                                        <button
+                                                            onClick={(e) => { e.preventDefault(); handleOpenReview(item.product, item.product_name); }}
+                                                            className="text-[10px] font-black uppercase tracking-widest text-brand-500 hover:text-brand-600 transition-colors flex items-center gap-1.5 bg-brand-50 dark:bg-brand-500/10 px-3 py-1.5 rounded-full mt-2"
+                                                        >
+                                                            <Star className="w-3 h-3" /> Write Review
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -167,6 +227,62 @@ const OrdersPage: React.FC = () => {
                     </div>
                 )}
             </div>
+            {/* Review Modal */}
+            {reviewModalOpen && selectedProduct && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setReviewModalOpen(false)}></div>
+                    <div className="relative bg-white dark:bg-gray-900 rounded-[3rem] w-full max-w-lg p-10 border border-gray-100 dark:border-gray-800 shadow-2xl transform transition-all">
+                        <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">Write a Review</h3>
+                        <p className="text-sm font-bold text-gray-500 mb-8 max-w-md break-words line-clamp-2">
+                            Share your thoughts on <span className="text-brand-500">{selectedProduct.name}</span>
+                        </p>
+
+                        <form onSubmit={handleSubmitReview} className="space-y-8">
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-4">Rating</label>
+                                <div className="flex gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setRating(star)}
+                                            className={`p-3 rounded-2xl transition-all ${rating >= star ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'bg-white dark:bg-gray-800 text-gray-300 dark:text-gray-600 border border-gray-100 dark:border-gray-700'}`}
+                                        >
+                                            <Star className={`w-6 h-6 ${rating >= star ? 'fill-current' : ''}`} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-4">Your Feedback</label>
+                                <textarea
+                                    required
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    className="w-full p-6 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl text-sm font-medium focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all placeholder:text-gray-400 min-h-[150px] dark:text-white"
+                                    placeholder="What did you like or dislike?"
+                                />
+                            </div>
+                            <div className="flex gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setReviewModalOpen(false)}
+                                    className="flex-1 py-5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={submittingReview}
+                                    className="flex-1 py-5 bg-brand-500 text-white text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/20 disabled:opacity-50"
+                                >
+                                    {submittingReview ? 'Publishing...' : 'Publish'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
             <ToastContainer position="bottom-right" />
         </div>
     );

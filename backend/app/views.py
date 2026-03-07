@@ -298,5 +298,54 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(product_id=product_id)
         return queryset
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def my_review(self, request):
+        product_id = request.query_params.get('product')
+        if not product_id:
+             return Response({"error": "Product ID required"}, status=status.HTTP_400_BAD_REQUEST)
+        review = ProductReview.objects.filter(product_id=product_id, user=request.user).first()
+        if review:
+             return Response(self.get_serializer(review).data)
+        return Response({}, status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request, *args, **kwargs):
+        product_id = request.data.get('product')
+        user = request.user
+        
+        has_purchased = OrderItem.objects.filter(
+            order__user=user,
+            product_id=product_id,
+            order__status='Delivered'
+        ).exists()
+
+        if not has_purchased:
+            return Response({"detail": "You can only review products that have been delivered to you."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        review = ProductReview.objects.filter(product_id=product_id, user=user).first()
+        
+        if review:
+            serializer = self.get_serializer(review, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        serializer.save(user=self.request.user, is_verified_purchase=True)
+
+    def perform_update(self, serializer):
+        if serializer.instance.user != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You cannot edit someone else's review.")
+        serializer.save(is_verified_purchase=True)
+        
+    def perform_destroy(self, instance):
+        if instance.user != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You cannot delete someone else's review.")
+        instance.delete()
