@@ -48,11 +48,13 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = User.objects.all().order_by("-date_joined") if hasattr(User, 'date_joined') else User.objects.all().order_by("-id")
         
-        if not self.request.user.is_staff:
+        is_admin_or_seller = self.request.user.is_staff or self.request.user.is_seller
+
+        if not is_admin_or_seller:
             queryset = queryset.filter(id=self.request.user.id)
             
         search = self.request.query_params.get("search")
-        if search and self.request.user.is_staff:
+        if search and is_admin_or_seller:
             queryset = queryset.filter(
                 Q(username__icontains=search) |
                 Q(email__icontains=search) |
@@ -61,8 +63,8 @@ class UserViewSet(viewsets.ModelViewSet):
             )
             
         role = self.request.query_params.get("role")
-        if role == "customer" and self.request.user.is_staff:
-            queryset = queryset.filter(is_staff=False, is_seller=False)
+        if role == "customer" and is_admin_or_seller:
+            queryset = queryset.filter(is_customer=True, is_seller=False)
             
         return queryset
 
@@ -271,7 +273,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             # Allow admin/seller to filter by user_id
             user_id = self.request.query_params.get("user_id")
             if user_id:
-                queryset = queryset.filter(user_id=user_id)
+                queryset = queryset.filter(user_id=int(user_id))
 
         # Apply search and status filtering
         search = self.request.query_params.get("search")

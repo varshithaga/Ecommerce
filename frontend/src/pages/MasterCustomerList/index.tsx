@@ -16,12 +16,20 @@ interface Customer {
     date_joined?: string;
 }
 
+interface OrderItem {
+    id: number;
+    product_name: string;
+    quantity: number;
+    price: string;
+}
+
 interface Order {
     id: number;
     order_id: string;
     total_amount: string;
     status: string;
     created_at: string;
+    items: OrderItem[];
 }
 
 const MasterCustomerList = () => {
@@ -300,6 +308,7 @@ const MasterCustomerList = () => {
                                             <thead className="bg-gray-50 dark:bg-gray-800/50">
                                                 <tr>
                                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Order ID</th>
+                                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Products</th>
                                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Date</th>
                                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Amount</th>
                                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Status</th>
@@ -309,6 +318,15 @@ const MasterCustomerList = () => {
                                                 {customerOrders.map(order => (
                                                     <tr key={order.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                                         <td className="px-6 py-4 font-black text-gray-900 dark:text-white text-sm">#{order.order_id.slice(0, 8)}</td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex flex-col gap-1">
+                                                                {order.items?.map(item => (
+                                                                    <span key={item.id} className="text-xs font-bold text-gray-600 dark:text-gray-300">
+                                                                        {item.quantity}x {item.product_name}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </td>
                                                         <td className="px-6 py-4 font-bold text-gray-500 text-sm">
                                                             {new Date(order.created_at).toLocaleDateString()}
                                                         </td>
