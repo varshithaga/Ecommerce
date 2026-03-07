@@ -400,6 +400,28 @@ class OrderViewSet(viewsets.ModelViewSet):
             "message": "Order cancelled successfully"
         })
 
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def reorder(self, request, pk=None):
+        order = self.get_object()
+        user = request.user
+        
+        from .models import Cart, CartItem
+        cart, _ = Cart.objects.get_or_create(user=user)
+        
+        for order_item in order.items.all():
+            if order_item.product and order_item.product.stock > 0:
+                cart_item, created = CartItem.objects.get_or_create(cart=cart, product=order_item.product)
+                if not created:
+                    cart_item.quantity += order_item.quantity
+                else:
+                    cart_item.quantity = order_item.quantity
+                cart_item.save()
+                
+        return Response({
+            "status": "success",
+            "message": "Items added to cart successfully for reorder"
+        })
+
 class ProductReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ProductReviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]

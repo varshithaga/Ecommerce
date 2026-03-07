@@ -31,6 +31,7 @@ interface Order {
     payment_method: string;
     created_at: string;
     items: OrderItem[];
+    cancel_reason?: string;
 }
 
 const MasterOrders: React.FC = () => {
@@ -221,8 +222,8 @@ const MasterOrders: React.FC = () => {
                                                     value={order.status}
                                                     onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                                                     className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm outline-none border border-transparent hover:border-brand-500/20 cursor-pointer ${order.status === 'Delivered' ? 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400'
-                                                            : order.status === 'Cancelled' ? 'bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-400'
-                                                                : 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
+                                                        : order.status === 'Cancelled' ? 'bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-400'
+                                                            : 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'
                                                         }`}
                                                 >
                                                     <option value="Pending">Pending</option>
@@ -326,11 +327,17 @@ const MasterOrders: React.FC = () => {
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-[10px] font-black text-gray-400 uppercase">Status</span>
-                                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${selectedOrder.status === 'Delivered' ? 'bg-success-500 text-white' : 'bg-brand-500 text-white'
+                                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${selectedOrder.status === 'Delivered' ? 'bg-success-500 text-white' : selectedOrder.status === 'Cancelled' ? 'bg-error-500 text-white' : 'bg-brand-500 text-white'
                                                 }`}>
                                                 {selectedOrder.status}
                                             </span>
                                         </div>
+                                        {selectedOrder.status === 'Cancelled' && selectedOrder.cancel_reason && (
+                                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cancel Reason</span>
+                                                <p className="text-xs font-bold text-error-500 mt-1">{selectedOrder.cancel_reason}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

@@ -32,6 +32,7 @@ const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage"));
 const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 const CustomerProfilePage = lazy(() => import("./pages/CustomerProfilePage"));
+const InvoicePage = lazy(() => import("./pages/InvoicePage"));
 
 import ClientPage from "./pages/registration/client";
 import SupplierPage from "./pages/registration/supplier";
@@ -56,6 +57,7 @@ export function appRoutes() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/invoice/:id" element={<InvoicePage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/my-profile" element={<CustomerProfilePage />} />
