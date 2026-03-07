@@ -37,6 +37,12 @@ const OrdersPage: React.FC = () => {
     const [comment, setComment] = useState('');
     const [submittingReview, setSubmittingReview] = useState(false);
 
+    // Cancel Modal State
+    const [cancelModalOpen, setCancelModalOpen] = useState(false);
+    const [orderToCancel, setOrderToCancel] = useState<number | null>(null);
+    const [cancelReason, setCancelReason] = useState('');
+    const [submittingCancel, setSubmittingCancel] = useState(false);
+
     const handleOpenReview = async (productId: number, productName: string) => {
         setSelectedProduct({ id: productId, name: productName });
         setRating(5);
@@ -76,6 +82,43 @@ const OrdersPage: React.FC = () => {
             toast.error(err.message || "Failed to submit review");
         } finally {
             setSubmittingReview(false);
+        }
+    };
+
+    const handleOpenCancel = (orderId: number) => {
+        setOrderToCancel(orderId);
+        setCancelReason('');
+        setCancelModalOpen(true);
+    };
+
+    const handleSubmitCancel = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!orderToCancel || !cancelReason.trim()) return;
+
+        setSubmittingCancel(true);
+        try {
+            const token = localStorage.getItem('access');
+            const response = await fetch(createApiUrl(`api/orders/${orderToCancel}/cancel_order/`), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ reason: cancelReason })
+            });
+
+            if (response.ok) {
+                toast.success("Order cancelled successfully.");
+                setOrders(orders.map(o => o.id === orderToCancel ? { ...o, status: 'Cancelled' } : o));
+                setCancelModalOpen(false);
+            } else {
+                const data = await response.json();
+                toast.error(data.error || "Failed to cancel order.");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Failed to cancel order.");
+        } finally {
+            setSubmittingCancel(false);
         }
     };
 
@@ -217,7 +260,15 @@ const OrdersPage: React.FC = () => {
                                 </div>
 
                                 {/* Order Footer (Action) */}
-                                <div className="p-6 bg-white/50 dark:bg-gray-900/40 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+                                <div className="p-6 bg-white/50 dark:bg-gray-900/40 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                                    {!['Delivered', 'Cancelled'].includes(order.status) ? (
+                                        <button
+                                            onClick={() => handleOpenCancel(order.id)}
+                                            className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors"
+                                        >
+                                            Cancel Order
+                                        </button>
+                                    ) : <div></div>}
                                     <button className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-brand-500 transition-colors">
                                         Download Invoice
                                     </button>
@@ -277,6 +328,47 @@ const OrdersPage: React.FC = () => {
                                     className="flex-1 py-5 bg-brand-500 text-white text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/20 disabled:opacity-50"
                                 >
                                     {submittingReview ? 'Publishing...' : 'Publish'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* Cancel Modal */}
+            {cancelModalOpen && orderToCancel && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCancelModalOpen(false)}></div>
+                    <div className="relative bg-white dark:bg-gray-900 rounded-[3rem] w-full max-w-lg p-10 border border-gray-100 dark:border-gray-800 shadow-2xl transform transition-all">
+                        <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">Cancel Order</h3>
+                        <p className="text-sm font-bold text-gray-500 mb-8 max-w-md break-words line-clamp-2">
+                            Please provide a reason for cancelling your order.
+                        </p>
+
+                        <form onSubmit={handleSubmitCancel} className="space-y-8">
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-4">Reason for Cancellation</label>
+                                <textarea
+                                    required
+                                    value={cancelReason}
+                                    onChange={(e) => setCancelReason(e.target.value)}
+                                    className="w-full p-6 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl text-sm font-medium focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all placeholder:text-gray-400 min-h-[150px] dark:text-white"
+                                    placeholder="Why are you cancelling?"
+                                />
+                            </div>
+                            <div className="flex gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setCancelModalOpen(false)}
+                                    className="flex-1 py-5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+                                >
+                                    Go Back
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={submittingCancel}
+                                    className="flex-1 py-5 bg-red-500 text-white text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-red-600 transition-all shadow-xl shadow-red-500/20 disabled:opacity-50"
+                                >
+                                    {submittingCancel ? 'Cancelling...' : 'Confirm Cancel'}
                                 </button>
                             </div>
                         </form>

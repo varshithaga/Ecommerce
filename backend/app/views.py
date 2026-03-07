@@ -383,6 +383,23 @@ class OrderViewSet(viewsets.ModelViewSet):
             "status_counts": status_summary
         })
 
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def cancel_order(self, request, pk=None):
+        order = self.get_object()
+        
+        if order.status in ['Delivered', 'Cancelled']:
+            return Response({"error": "Order cannot be cancelled"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        cancel_reason = request.data.get("reason", "No reason provided")
+        order.status = "Cancelled"
+        order.cancel_reason = cancel_reason
+        order.save()
+        
+        return Response({
+            "status": "success", 
+            "message": "Order cancelled successfully"
+        })
+
 class ProductReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ProductReviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]

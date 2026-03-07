@@ -51,13 +51,15 @@ class RegisterSerializer(serializers.ModelSerializer):
             'country': validated_data.pop('country', '')
         }
 
+        is_seller = validated_data.get('is_seller', False)
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password'],
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
-            is_seller=validated_data.get('is_seller', False)
+            is_seller=is_seller,
+            is_customer=not is_seller
         )
 
         # If any address field is provided, create the address
@@ -175,6 +177,6 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'order_id', 'user', 'customer_name', 'shipping_address', 'shipping_address_details',
-            'total_amount', 'payment_method', 'status', 'is_paid', 'items', 'created_at'
+            'total_amount', 'payment_method', 'status', 'is_paid', 'items', 'cancel_reason', 'created_at'
         ]
         read_only_fields = ['user', 'total_amount']
