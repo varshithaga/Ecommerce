@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { createApiUrl, getAuthHeaders } from '../../access/access.ts';
 import { ToastContainer, toast } from 'react-toastify';
-import { Eye, X, MapPin, User, Package, Clock, Search, ChevronLeft, ChevronRight, Download, DollarSign } from 'lucide-react';
+import { Eye, X, MapPin, User, Package, Clock, Search, ChevronLeft, ChevronRight, Download, DollarSign, ChevronUp, ChevronDown, Printer } from 'lucide-react';
 import DatePicker from '../../components/form/date-picker';
 
 interface OrderItem {
@@ -33,6 +33,7 @@ interface Order {
     created_at: string;
     items: OrderItem[];
     cancel_reason?: string;
+    delivery_date?: string;
 }
 
 const MasterOrders: React.FC = () => {
@@ -53,6 +54,10 @@ const MasterOrders: React.FC = () => {
     const [totalResults, setTotalResults] = useState(0);
     const [totalSales, setTotalSales] = useState(0);
 
+    // Sorting State
+    const [sortField, setSortField] = useState('created_at');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
     const fetchOrders = useCallback(async () => {
         setLoading(true);
         try {
@@ -62,6 +67,9 @@ const MasterOrders: React.FC = () => {
             url.searchParams.append('search', searchQuery);
             url.searchParams.append('status', statusFilter);
             url.searchParams.append('payment_method', paymentMethod);
+
+            const orderingParam = sortDirection === "desc" ? `-${sortField}` : sortField;
+            url.searchParams.append('ordering', orderingParam);
 
             if (period !== "all") {
                 url.searchParams.append('period', period);
@@ -88,7 +96,7 @@ const MasterOrders: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, searchQuery, statusFilter, period, startDate, endDate]);
+    }, [currentPage, searchQuery, statusFilter, period, startDate, endDate, paymentMethod, sortField, sortDirection]);
 
     useEffect(() => {
         fetchOrders();
@@ -134,6 +142,20 @@ const MasterOrders: React.FC = () => {
         setCurrentPage(1);
     };
 
+    const handleSort = (field: string) => {
+        if (sortField === field) {
+            setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortField(field);
+            setSortDirection('desc');
+        }
+        setCurrentPage(1);
+    };
+
+    const handlePrintInvoice = () => {
+        window.print();
+    };
+
     const updateOrderStatus = async (orderId: number, newStatus: string) => {
         try {
             const headers = await getAuthHeaders();
@@ -165,6 +187,30 @@ const MasterOrders: React.FC = () => {
 
     return (
         <div className="p-6">
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @media print {
+                    body * {
+                        visibility: hidden;
+                    }
+                    #printable-modal, #printable-modal * {
+                        visibility: visible;
+                    }
+                    #printable-modal {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        background: white !important;
+                        box-shadow: none !important;
+                        overflow: visible !important;
+                        height: auto !important;
+                    }
+                    #printable-modal-buttons {
+                        display: none !important;
+                    }
+                }
+            `}} />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm">
                     <div className="flex items-center gap-4">
@@ -301,8 +347,25 @@ const MasterOrders: React.FC = () => {
                             <tr>
                                 <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Order ID</th>
                                 <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Customer</th>
-                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Date</th>
-                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Amount</th>
+                                <th
+                                    className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 cursor-pointer hover:text-brand-500 transition-colors"
+                                    onClick={() => handleSort('created_at')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Ordered On
+                                        {sortField === 'created_at' && (sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
+                                    </div>
+                                </th>
+                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Pref. Delivery</th>
+                                <th
+                                    className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 cursor-pointer hover:text-brand-500 transition-colors"
+                                    onClick={() => handleSort('total_amount')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Amount
+                                        {sortField === 'total_amount' && (sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
+                                    </div>
+                                </th>
                                 <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
                                 <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Actions</th>
                             </tr>
@@ -310,7 +373,7 @@ const MasterOrders: React.FC = () => {
                         <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                             {orders.length === 0 && !loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-20 text-center">
+                                    <td colSpan={7} className="px-6 py-20 text-center">
                                         <div className="flex flex-col items-center">
                                             <Package className="w-12 h-12 text-gray-200 mb-4" />
                                             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No orders found</p>
@@ -328,6 +391,9 @@ const MasterOrders: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-500">
                                             {new Date(order.created_at).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-300">
+                                            {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : '-'}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="text-sm font-black text-brand-500">${order.total_amount}</span>
@@ -413,7 +479,7 @@ const MasterOrders: React.FC = () => {
             {/* Modal for Order Details */}
             {selectedOrder && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-slideUp">
+                    <div id="printable-modal" className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-slideUp">
                         {/* Modal Header */}
                         <div className="p-10 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
                             <div>
@@ -441,6 +507,12 @@ const MasterOrders: React.FC = () => {
                                         <p className="text-sm font-black text-gray-900 dark:text-white uppercase">{selectedOrder.customer_name}</p>
                                         <p className="text-xs font-bold text-gray-500 mt-1">{selectedOrder.shipping_address_details.phone}</p>
                                     </div>
+                                    {selectedOrder.delivery_date && (
+                                        <div className="mt-4 bg-brand-50/50 dark:bg-brand-500/10 p-4 rounded-2xl border border-brand-100 dark:border-brand-500/20">
+                                            <p className="text-[10px] font-black uppercase text-brand-500 tracking-widest">Pref. Delivery Date</p>
+                                            <p className="text-sm font-black text-gray-900 dark:text-white uppercase mt-1">{selectedOrder.delivery_date}</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-4">
@@ -509,12 +581,18 @@ const MasterOrders: React.FC = () => {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-10 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20 flex justify-between items-center">
+                        <div id="printable-modal-buttons" className="p-10 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20 flex justify-between items-center">
                             <div>
                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Valuation</span>
                                 <h4 className="text-3xl font-black text-brand-500 tracking-tighter">${selectedOrder.total_amount}</h4>
                             </div>
                             <div className="flex gap-4">
+                                <button
+                                    onClick={handlePrintInvoice}
+                                    className="px-6 py-4 bg-white dark:bg-gray-800 text-brand-500 hover:text-brand-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-50 transition shadow-sm border border-brand-100 flex items-center gap-2"
+                                >
+                                    <Printer className="w-4 h-4" /> Print
+                                </button>
                                 <button
                                     onClick={() => setSelectedOrder(null)}
                                     className="px-8 py-4 bg-white dark:bg-gray-800 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition shadow-sm border border-gray-100 dark:border-gray-700"

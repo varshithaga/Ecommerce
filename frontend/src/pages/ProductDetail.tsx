@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getProductById, Product, addToCart, getRelatedProducts } from './products/api';
 import PageMeta from '../components/common/PageMeta';
 import { toast, ToastContainer } from 'react-toastify';
@@ -9,6 +9,7 @@ import { createApiUrl } from '../access/access.ts';
 
 const ProductDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [product, setProduct] = useState<Product | null>(null);
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
@@ -26,6 +27,19 @@ const ProductDetail: React.FC = () => {
             toast.success(`${product.name} added to bag!`);
         } catch (err: any) {
             toast.error(err.message || 'Error adding to bag');
+        } finally {
+            setAddingToCart(false);
+        }
+    };
+
+    const handleBuyNow = async () => {
+        if (!product) return;
+        setAddingToCart(true);
+        try {
+            await addToCart(product.id, quantity);
+            navigate('/checkout');
+        } catch (err: any) {
+            toast.error(err.message || 'Error processing request');
         } finally {
             setAddingToCart(false);
         }
@@ -268,7 +282,11 @@ const ProductDetail: React.FC = () => {
                             >
                                 {addingToCart ? 'Adding...' : 'Add to Bag'}
                             </button>
-                            <button className="flex-1 h-16 bg-brand-500 text-white text-sm font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-100 dark:shadow-none translate-y-0 active:translate-y-1">
+                            <button
+                                onClick={handleBuyNow}
+                                disabled={addingToCart}
+                                className="flex-1 h-16 bg-brand-500 text-white text-sm font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-100 dark:shadow-none translate-y-0 active:translate-y-1 disabled:opacity-50"
+                            >
                                 Buy Now
                             </button>
                         </div>

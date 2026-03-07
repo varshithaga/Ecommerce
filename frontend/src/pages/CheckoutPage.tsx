@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { createApiUrl, getAuthHeaders } from '../access/access.ts';
 import PageMeta from '../components/common/PageMeta';
 import { toast, ToastContainer } from 'react-toastify';
+import DatePicker from '../components/form/date-picker';
+
 
 interface CartItem {
     id: number;
@@ -33,6 +35,7 @@ const CheckoutPage: React.FC = () => {
     const [totalAmount, setTotalAmount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [deliveryDate, setDeliveryDate] = useState("");
 
     const [newAddress, setNewAddress] = useState({
         phone: '',
@@ -138,7 +141,8 @@ const CheckoutPage: React.FC = () => {
                 headers: headers,
                 body: JSON.stringify({
                     shipping_address: selectedAddressId,
-                    payment_method: 'COD'
+                    payment_method: 'COD',
+                    ...(deliveryDate && { delivery_date: deliveryDate })
                 })
             });
 
@@ -269,6 +273,20 @@ const CheckoutPage: React.FC = () => {
                                         )}
                                     </>
                                 )}
+                            </div>
+
+                            {/* Delivery Date Selection */}
+                            <div className="bg-gray-50 dark:bg-gray-900/40 p-10 rounded-[3rem] border border-gray-100 dark:border-gray-800">
+                                <h2 className="text-xl font-black uppercase tracking-widest mb-8 text-gray-900 dark:text-white">Delivery Preferences</h2>
+                                <div className="space-y-4">
+                                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">Preferred Delivery Date (Optional)</label>
+                                    <DatePicker
+                                        id="checkout_delivery_date"
+                                        placeholder="Select Date"
+                                        onChange={(_d, ds) => setDeliveryDate(ds)}
+                                        defaultDate={deliveryDate}
+                                    />
+                                </div>
                             </div>
 
                             <div className="bg-gray-50 dark:bg-gray-900/40 p-10 rounded-[3rem] border border-gray-100 dark:border-gray-800">

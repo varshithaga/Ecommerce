@@ -285,6 +285,7 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=ORDER_STATUS, default='Pending')
     is_paid = models.BooleanField(default=False)
     cancel_reason = models.TextField(blank=True, null=True)
+    delivery_date = models.DateField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

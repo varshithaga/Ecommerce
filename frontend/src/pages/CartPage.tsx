@@ -50,8 +50,27 @@ const CartPage: React.FC = () => {
     }, []);
 
     const removeFromCart = async (itemId: number) => {
-        toast.info("Remove functionality coming soon!");
-        console.log("Removing item:", itemId);
+        try {
+            const headers = await getAuthHeaders();
+            const response = await fetch(createApiUrl('api/cart/remove_item/'), {
+                method: 'POST',
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ item_id: itemId })
+            });
+
+            if (response.ok) {
+                toast.success("Item removed from cart");
+                fetchCart();
+            } else {
+                toast.error("Failed to remove item");
+            }
+        } catch (error) {
+            console.error('Error removing item:', error);
+            toast.error("An error occurred while removing item");
+        }
     };
 
     if (loading) return (

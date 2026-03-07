@@ -248,6 +248,23 @@ class CartViewSet(viewsets.ModelViewSet):
 
         return Response({"message": "Item added to cart"}, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['post', 'delete'])
+    def remove_item(self, request):
+        cart = Cart.objects.filter(user=request.user).first()
+        if not cart:
+            return Response({"error": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        item_id = request.data.get('item_id')
+        if not item_id:
+            return Response({"error": "item_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            cart_item = CartItem.objects.get(id=item_id, cart=cart)
+            cart_item.delete()
+            return Response({"message": "Item removed"}, status=status.HTTP_200_OK)
+        except CartItem.DoesNotExist:
+            return Response({"error": "Item not found in cart"}, status=status.HTTP_404_NOT_FOUND)
+
 class ShippingAddressViewSet(viewsets.ModelViewSet):
     serializer_class = ShippingAddressSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -308,7 +325,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         if payment_method and payment_method.lower() != "all":
             queryset = queryset.filter(payment_method=payment_method)
 
-        return queryset.order_by("-created_at")
+        ordering = self.request.query_params.get("ordering", "-created_at")
+        if ordering not in ["created_at", "-created_at", "total_amount", "-total_amount"]:
+            ordering = "-created_at"
+            
+        return queryset.order_by(ordering)
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
