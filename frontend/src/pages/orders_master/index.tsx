@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { createApiUrl, getAuthHeaders } from '../../access/access.ts';
 import { ToastContainer, toast } from 'react-toastify';
-import { Eye, X, MapPin, User, Package, Clock, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, X, MapPin, User, Package, Clock, Search, ChevronLeft, ChevronRight, Download, DollarSign } from 'lucide-react';
+import DatePicker from '../../components/form/date-picker';
 
 interface OrderItem {
     id: number;
@@ -44,8 +45,13 @@ const MasterOrders: React.FC = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [period, setPeriod] = useState("this_month");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [paymentMethod, setPaymentMethod] = useState("all");
     const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
     const [totalResults, setTotalResults] = useState(0);
+    const [totalSales, setTotalSales] = useState(0);
 
     const fetchOrders = useCallback(async () => {
         setLoading(true);
@@ -55,6 +61,15 @@ const MasterOrders: React.FC = () => {
             url.searchParams.append('page', currentPage.toString());
             url.searchParams.append('search', searchQuery);
             url.searchParams.append('status', statusFilter);
+            url.searchParams.append('payment_method', paymentMethod);
+
+            if (period !== "all") {
+                url.searchParams.append('period', period);
+                if (period === "custom_range" && startDate && endDate) {
+                    url.searchParams.append('start_date', startDate);
+                    url.searchParams.append('end_date', endDate);
+                }
+            }
 
             const response = await fetch(url.toString(), {
                 headers: headers
@@ -64,6 +79,7 @@ const MasterOrders: React.FC = () => {
                 setOrders(data.results);
                 setTotalPages(data.total_pages);
                 setTotalResults(data.count);
+                setTotalSales(data.total_sales || 0);
                 setStatusCounts(data.status_counts || {});
             }
         } catch (error) {
@@ -72,11 +88,46 @@ const MasterOrders: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, searchQuery, statusFilter]);
+    }, [currentPage, searchQuery, statusFilter, period, startDate, endDate]);
 
     useEffect(() => {
         fetchOrders();
     }, [fetchOrders]);
+
+    const handleExportCSV = async () => {
+        try {
+            const headers = await getAuthHeaders();
+            const url = new URL(createApiUrl('api/orders/export_csv/'));
+            url.searchParams.append('search', searchQuery);
+            url.searchParams.append('status', statusFilter);
+            url.searchParams.append('period', period);
+            url.searchParams.append('payment_method', paymentMethod);
+            if (period === "custom_range" && startDate && endDate) {
+                url.searchParams.append('start_date', startDate);
+                url.searchParams.append('end_date', endDate);
+            }
+
+            const response = await fetch(url.toString(), {
+                headers: headers
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else {
+                toast.error("Export failed");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Export error");
+        }
+    };
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -114,22 +165,46 @@ const MasterOrders: React.FC = () => {
 
     return (
         <div className="p-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-                <div>
-                    <h1 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
-                        Manage <span className="text-brand-500">Orders</span>
-                    </h1>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                        Viewing {totalResults} total customer orders
-                    </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-brand-50 dark:bg-brand-500/10 rounded-2xl">
+                            <Package className="w-6 h-6 text-brand-500" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Orders</p>
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">{totalResults}</h3>
+                        </div>
+                    </div>
                 </div>
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-success-50 dark:bg-success-500/10 rounded-2xl">
+                            <DollarSign className="w-6 h-6 text-success-500" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Net Revenue</p>
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">${totalSales.toLocaleString()}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-center">
+                    <button
+                        onClick={handleExportCSV}
+                        className="flex items-center gap-3 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:opacity-90 transition-all shadow-xl"
+                    >
+                        <Download className="w-4 h-4" />
+                        Export Orders (CSV)
+                    </button>
+                </div>
+            </div>
 
-                {/* Search and Filters */}
+            <div className="flex flex-col gap-6 mb-8">
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                     <form onSubmit={handleSearch} className="relative w-full sm:w-64">
                         <input
                             type="text"
-                            placeholder="Search Order ID, Name..."
+                            placeholder="Search Order ID, Name, Email, Phone..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl text-sm focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-sm"
@@ -137,25 +212,78 @@ const MasterOrders: React.FC = () => {
                         <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
                     </form>
 
-                    <div className="flex items-center gap-2 bg-white dark:bg-gray-900 p-1.5 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
-                        {["all", "Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"].map((status) => (
-                            <button
-                                key={status}
-                                onClick={() => { setStatusFilter(status); setCurrentPage(1); }}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === status
-                                    ? "bg-brand-500 text-white shadow-lg shadow-brand-100"
-                                    : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                                    }`}
-                            >
-                                {status}
-                                {statusCounts[status] !== undefined && status !== "all" && (
-                                    <span className={`ml-2 px-1.5 py-0.5 rounded-md ${statusFilter === status ? "bg-white/20" : "bg-gray-100 dark:bg-gray-800"}`}>
-                                        {statusCounts[status]}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
+                    {/* Period Filter */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        <select
+                            value={period}
+                            onChange={(e) => { setPeriod(e.target.value); setCurrentPage(1); }}
+                            className="px-5 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none shadow-sm cursor-pointer hover:border-brand-500/30 transition-all text-gray-700 dark:text-gray-300"
+                        >
+                            <option value="all">All Periods</option>
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="this_week">This Week</option>
+                            <option value="this_month">This Month</option>
+                            <option value="last_month">Last Month</option>
+                            <option value="this_quarter">This Quarter</option>
+                            <option value="this_year">This Year</option>
+                            <option value="custom_range">Custom Range</option>
+                        </select>
+
+                        <select
+                            value={paymentMethod}
+                            onChange={(e) => { setPaymentMethod(e.target.value); setCurrentPage(1); }}
+                            className="px-5 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none shadow-sm cursor-pointer hover:border-brand-500/30 transition-all text-gray-700 dark:text-gray-300"
+                        >
+                            <option value="all">All Payments</option>
+                            <option value="COD">Cash on Delivery</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="NetBanking">Net Banking</option>
+                        </select>
+
+                        {period === "custom_range" && (
+                            <div className="flex items-center gap-2 animate-fadeIn min-w-[320px]">
+                                <div className="flex-1">
+                                    <DatePicker
+                                        id="order_start_date"
+                                        placeholder="From Date"
+                                        onChange={(_d, ds) => { setStartDate(ds); setCurrentPage(1); }}
+                                        defaultDate={startDate}
+                                    />
+                                </div>
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">to</span>
+                                <div className="flex-1">
+                                    <DatePicker
+                                        id="order_end_date"
+                                        placeholder="To Date"
+                                        onChange={(_d, ds) => { setEndDate(ds); setCurrentPage(1); }}
+                                        defaultDate={endDate}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white dark:bg-gray-900 p-1.5 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm overflow-x-auto no-scrollbar max-w-full">
+                    {["all", "Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"].map((status) => (
+                        <button
+                            key={status}
+                            onClick={() => { setStatusFilter(status); setCurrentPage(1); }}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === status
+                                ? "bg-brand-500 text-white shadow-lg shadow-brand-100"
+                                : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                }`}
+                        >
+                            {status}
+                            {statusCounts[status] !== undefined && status !== "all" && (
+                                <span className={`ml-2 px-1.5 py-0.5 rounded-md ${statusFilter === status ? "bg-white/20" : "bg-gray-100 dark:bg-gray-800"}`}>
+                                    {statusCounts[status]}
+                                </span>
+                            )}
+                        </button>
+                    ))}
                 </div>
             </div>
 

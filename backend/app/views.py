@@ -279,6 +279,17 @@ class OrderViewSet(viewsets.ModelViewSet):
         search = self.request.query_params.get("search")
         status_filter = self.request.query_params.get("status")
 
+        # Period filtering
+        period = self.request.query_params.get("period")
+        start_date = self.request.query_params.get("start_date")
+        end_date = self.request.query_params.get("end_date")
+
+        if period:
+            from .utils import get_period_range
+            start, end = get_period_range(period, start_date, end_date)
+            if start and end:
+                queryset = queryset.filter(created_at__date__range=[start, end])
+
         if status_filter and status_filter.lower() != "all":
             queryset = queryset.filter(status=status_filter)
 
@@ -286,9 +297,16 @@ class OrderViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 Q(order_id__icontains=search) |
                 Q(user__username__icontains=search) |
-                Q(status__icontains=search) |
+                Q(user__first_name__icontains=search) |
+                Q(user__last_name__icontains=search) |
+                Q(user__email__icontains=search) |
+                Q(user__phone__icontains=search) |
                 Q(total_amount__icontains=search)
             )
+
+        payment_method = self.request.query_params.get("payment_method")
+        if payment_method and payment_method.lower() != "all":
+            queryset = queryset.filter(payment_method=payment_method)
 
         return queryset.order_by("-created_at")
 
@@ -303,11 +321,13 @@ class OrderViewSet(viewsets.ModelViewSet):
             .order_by()
         )
         status_summary = {entry["status"]: entry["count"] for entry in status_counts}
+        total_sales = queryset.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
 
         if limit and str(limit).lower() == "all":
             serializer = self.get_serializer(queryset, many=True)
             return Response({
                 "count": queryset.count(),
+                "total_sales": total_sales,
                 "status_counts": status_summary,
                 "results": serializer.data
             })
@@ -317,14 +337,41 @@ class OrderViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(page, many=True)
             paginated_response = self.get_paginated_response(serializer.data)
             paginated_response.data["status_counts"] = status_summary
+            paginated_response.data["total_sales"] = total_sales
             return paginated_response
 
         serializer = self.get_serializer(queryset, many=True)
         return Response({
             "count": queryset.count(),
+            "total_sales": total_sales,
             "status_counts": status_summary,
             "results": serializer.data
         })
+
+    @action(detail=False, methods=['get'])
+    def export_csv(self, request):
+        import csv
+        from django.http import HttpResponse
+
+        queryset = self.get_queryset()
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="orders.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Order ID', 'Customer', 'Email', 'Date', 'Amount', 'Status', 'Payment Method'])
+
+        for order in queryset:
+            writer.writerow([
+                order.order_id,
+                order.user.get_full_name() or order.user.username,
+                order.user.email,
+                order.created_at.strftime('%Y-%m-%d %H:%M'),
+                order.total_amount,
+                order.status,
+                order.payment_method
+            ])
+
+        return response
 
     def perform_create(self, serializer):
         # Professional Checkout Logic:
