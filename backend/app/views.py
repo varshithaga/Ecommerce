@@ -43,11 +43,28 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = Pagination
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return User.objects.all()
-        return User.objects.filter(id=self.request.user.id)
+        queryset = User.objects.all().order_by("-date_joined") if hasattr(User, 'date_joined') else User.objects.all().order_by("-id")
+        
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(id=self.request.user.id)
+            
+        search = self.request.query_params.get("search")
+        if search and self.request.user.is_staff:
+            queryset = queryset.filter(
+                Q(username__icontains=search) |
+                Q(email__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search)
+            )
+            
+        role = self.request.query_params.get("role")
+        if role == "customer" and self.request.user.is_staff:
+            queryset = queryset.filter(is_staff=False, is_seller=False)
+            
+        return queryset
 
 class ProfileViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
@@ -250,6 +267,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         if not (user.is_staff or user.is_seller):
             queryset = queryset.filter(user=user)
+        else:
+            # Allow admin/seller to filter by user_id
+            user_id = self.request.query_params.get("user_id")
+            if user_id:
+                queryset = queryset.filter(user_id=user_id)
 
         # Apply search and status filtering
         search = self.request.query_params.get("search")

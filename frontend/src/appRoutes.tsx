@@ -6,6 +6,7 @@ const MasterDashboard = lazy(() => import("./pages/Dashboard/index"));
 const NotFound = lazy(() => import("./pages/OtherPage/NotFound"));
 const UserProfiles = lazy(() => import("./pages/UserProfiles"));
 const MasterOrders = lazy(() => import("./pages/orders_master/index"));
+const MasterCustomerList = lazy(() => import("./pages/MasterCustomerList/index"));
 const Videos = lazy(() => import("./pages/UiElements/Videos"));
 const Images = lazy(() => import("./pages/UiElements/Images"));
 const Alerts = lazy(() => import("./pages/UiElements/Alerts"));
@@ -68,6 +69,7 @@ export function appRoutes() {
           <Route path="master/products" element={<ProductPage />} />
           <Route path="master/productcategory" element={<CategoryPage />} />
           <Route path="master/orders" element={<MasterOrders />} />
+          <Route path="master/customers" element={<MasterCustomerList />} />
 
           {/* Others Page */}
           <Route path="/profile" element={<UserProfiles />} />

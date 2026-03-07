@@ -4,10 +4,10 @@ import { Link, useLocation } from "react-router";
 // Assume these icons are imported from an icon library
 import {
   LayoutDashboard,
-  UserCog,
   Images,
   ChevronDownIcon,
   Package,
+  Users
 } from "lucide-react"; // 👈 Example icons
 
 import { HorizontaLDots } from "../../icons";
@@ -25,7 +25,7 @@ const navItems: NavItem[] = [
   {
     icon: <LayoutDashboard className="w-5 h-5" />,
     name: "Dashboard",
-    path: "/master-dashboard",
+    path: "/master/master-dashboard",
   },
   {
     icon: <Images className="w-5 h-5" />,
@@ -36,9 +36,9 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <UserCog className="w-5 h-5" />,
-    name: "User Management",
-    path: "/master/usermanagement",
+    icon: <Users className="w-5 h-5" />,
+    name: "Customers",
+    path: "/master/customers",
   },
   {
     icon: <Package className="w-5 h-5" />,
