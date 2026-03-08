@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import happy from '../../assets/happy-bank.jpg';
 import female from '../../assets/female.jpg';
 
@@ -22,9 +22,8 @@ const HeroSection = () => {
             key={index}
             src={image}
             alt={index === 0 ? 'Female Customer' : 'Happy Bank Customer'} // Updated alt text
-            className={`absolute w-full h-full object-cover transition-opacity duration-1000 ${
-              index === currentImage ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`absolute w-full h-full object-cover transition-opacity duration-1000 ${index === currentImage ? 'opacity-100' : 'opacity-0'
+              }`}
           />
         ))}
       </div>

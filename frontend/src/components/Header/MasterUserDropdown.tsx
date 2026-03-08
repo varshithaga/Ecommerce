@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link } from "react-router-dom";
-import { axiosInstance } from "../../pages/Dashboard/api";
 import { getUserProfile } from "../../pages/profile/api";
 
 interface UserProfile {

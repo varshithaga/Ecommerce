@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { Link } from "react-router";
-import { useNotifications } from "../../context/NotificationContext";
+import { Link } from "react-router-dom";
+import { useNotifications, Notification } from "../../context/NotificationContext";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,9 +29,8 @@ export default function NotificationDropdown() {
         onClick={handleClick}
       >
         <span
-          className={`absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-orange-400 ${
-            unreadCount === 0 ? "hidden" : "flex"
-          }`}
+          className={`absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-orange-400 ${unreadCount === 0 ? "hidden" : "flex"
+            }`}
         >
           <span className="absolute inline-flex w-full h-full bg-orange-400 rounded-full opacity-75 animate-ping"></span>
         </span>
@@ -94,7 +93,7 @@ export default function NotificationDropdown() {
               </div>
             </li>
           ) : (
-            notifications.slice(0, 5).map((notification) => (
+            notifications.slice(0, 5).map((notification: Notification) => (
               <li key={notification.id}>
                 <DropdownItem
                   onItemClick={closeDropdown}
@@ -105,7 +104,7 @@ export default function NotificationDropdown() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="mb-1.5 block text-theme-sm">
                       <span className="font-medium text-gray-800 dark:text-white/90">
@@ -127,7 +126,7 @@ export default function NotificationDropdown() {
           )}
 
           {/* Old static items - to be removed */}
-          <li style={{display: 'none'}}>
+          <li style={{ display: 'none' }}>
             <DropdownItem
               onItemClick={closeDropdown}
               className="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"

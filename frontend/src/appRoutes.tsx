@@ -36,8 +36,6 @@ const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 const CustomerProfilePage = lazy(() => import("./pages/CustomerProfilePage"));
 const InvoicePage = lazy(() => import("./pages/InvoicePage"));
 
-import ClientPage from "./pages/registration/client";
-import SupplierPage from "./pages/registration/supplier";
 import ProductPage from "./pages/products/index";
 import CategoryPage from "./pages/category/index";
 
@@ -68,8 +66,6 @@ export function appRoutes() {
         {/* Dashboard Layout */}
         <Route element={<MasterLayout />}>
           <Route path="master/master-dashboard" element={<MasterDashboard />} />
-          <Route path="master/client" element={<ClientPage />} />
-          <Route path="master/supplier" element={<SupplierPage />} />
           <Route path="master/products" element={<ProductPage />} />
           <Route path="master/productcategory" element={<CategoryPage />} />
           <Route path="master/orders" element={<MasterOrders />} />

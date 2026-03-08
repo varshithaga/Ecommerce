@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance } from "../pages/Dashboard/api";
+import { axiosInstance } from "../components/auth/api";
 
 export default function CreateAdmin() {
   const [username, setUsername] = useState("");
@@ -29,7 +29,7 @@ export default function CreateAdmin() {
       setTimeout(() => navigate("/master/admin"), 1200);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || "Failed to create admin");
-      
+
     }
   };
 

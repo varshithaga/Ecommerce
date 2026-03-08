@@ -1,6 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
-import { createApiUrl } from '../../access/api.ts';
-
+import { createApiUrl } from '../../access/access.ts';
 // Types for the SMS OTP API
 interface SendOTPData {
   phone_number: string;
@@ -39,7 +38,7 @@ export const sendSMSOTP = async (otpData: SendOTPData): Promise<SMSOTPResponse> 
   try {
     console.log('Attempting to send OTP with data:', otpData);
     console.log('API URL:', createApiUrl('/sms-otp/send/'));
-    
+
     const response = await fetch(createApiUrl('/sms-otp/send/'), {
       method: 'POST',
       headers: {
@@ -88,7 +87,7 @@ export const verifySMSOTP = async (verifyData: VerifyOTPData): Promise<SMSOTPRes
   try {
     console.log('Attempting to verify OTP with data:', verifyData);
     console.log('API URL:', createApiUrl('/sms-otp/verify/'));
-    
+
     const response = await fetch(createApiUrl('/sms-otp/verify/'), {
       method: 'POST',
       headers: {
@@ -108,7 +107,7 @@ export const verifySMSOTP = async (verifyData: VerifyOTPData): Promise<SMSOTPRes
       // Updated to handle nested tokens structure
       const accessToken = data.tokens?.access || data.access_token;
       const refreshToken = data.tokens?.refresh || data.refresh_token;
-      
+
       if (accessToken) {
         localStorage.setItem('access', accessToken);
         console.log('Access token stored in localStorage');
@@ -117,7 +116,7 @@ export const verifySMSOTP = async (verifyData: VerifyOTPData): Promise<SMSOTPRes
         localStorage.setItem('refresh', refreshToken);
         console.log('Refresh token stored in localStorage');
       }
-      
+
       // Decode JWT to get user role (same as signin)
       let userRole = 'admin'; // default to admin
       if (accessToken) {
@@ -169,7 +168,7 @@ export const checkOTPStatus = async (phone_number: string): Promise<ApiResponse>
   try {
     console.log('Checking OTP status for phone:', phone_number);
     console.log('API URL:', createApiUrl(`/sms-otp/status/?phone_number=${encodeURIComponent(phone_number)}`));
-    
+
     const response = await fetch(createApiUrl(`/sms-otp/status/?phone_number=${encodeURIComponent(phone_number)}`), {
       method: 'GET',
       headers: {
@@ -178,7 +177,7 @@ export const checkOTPStatus = async (phone_number: string): Promise<ApiResponse>
     });
 
     console.log('Response status:', response.status);
-    
+
     const data = await response.json();
     console.log('OTP Status data:', data);
 

@@ -12,15 +12,15 @@ export const ensureScrollable = (): void => {
     // Force page to be scrollable
     document.body.style.overflow = 'auto';
     document.documentElement.style.overflow = 'auto';
-    
+
     const wrapper = document.querySelector('.mil-wrapper') as HTMLElement;
     if (wrapper) {
         wrapper.style.overflow = 'visible';
     }
-    
+
     // Reset any menu classes that might interfere with scroll
     document.body.classList.remove('mil-menu-open');
-    
+
     // Force ScrollTrigger refresh after a brief delay
     setTimeout(() => {
         if ((window as any).ScrollTrigger) {
@@ -43,16 +43,16 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
     useEffect(() => {
         // Ensure scrollability first
         ensureScrollable();
-        
+
         // Ensure page is scrollable by removing any overflow restrictions
         const wrapper = document.querySelector('.mil-wrapper') as HTMLElement;
         if (wrapper) {
             wrapper.style.overflow = 'visible';
         }
-        
+
         // Ensure body is scrollable
         document.body.style.overflow = 'auto';
-        
+
         // Refresh ScrollTrigger to recalculate positions with a slight delay
         setTimeout(() => {
             if ((window as any).ScrollTrigger) {
@@ -63,11 +63,11 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
         // Color variables
         const accent = 'rgba(255, 152, 0, 1)';
         const dark = '#000';
-        const light = '#fff';
+
 
         // Preloader animation
         const timeline = gsap.timeline();
-        
+
         if (preloaderRef.current) {
             timeline.to(".mil-preloader-animation", {
                 opacity: 1,
@@ -75,13 +75,13 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
 
             timeline.fromTo(
                 ".mil-animation-1 .mil-h3", {
-                    y: "30px",
-                    opacity: 0
-                }, {
-                    y: "0px",
-                    opacity: 1,
-                    stagger: 0.4
-                },
+                y: "30px",
+                opacity: 0
+            }, {
+                y: "0px",
+                opacity: 1,
+                stagger: 0.4
+            },
             );
 
             timeline.to(".mil-animation-1 .mil-h3", {
@@ -100,26 +100,26 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
                 width: "100%",
                 x: 0,
             }, "+=.1");
-            
+
             timeline.to(".mil-reveal-box", {
                 right: "0"
             });
-            
+
             timeline.to(".mil-reveal-box", 0.3, {
                 width: "0%"
             });
-            
+
             timeline.fromTo(".mil-animation-2 .mil-h3", {
                 opacity: 0,
             }, {
                 opacity: 1,
             }, "-=.5");
-            
+
             timeline.to(".mil-animation-2 .mil-h3", 0.6, {
                 opacity: 0,
                 y: '-30'
             }, "+=.5");
-            
+
             timeline.to(".mil-preloader", 0.8, {
                 opacity: 0,
                 onComplete: () => {
@@ -154,7 +154,7 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
         // Cursor functionality
         if (cursorRef.current) {
             const cursor = cursorRef.current;
-            
+
             gsap.set(cursor, {
                 xPercent: -50,
                 yPercent: -50,
@@ -260,8 +260,8 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
 
         // GSAP animations for elements with 'mil-up' class
         gsap.utils.toArray<Element>('.mil-up').forEach((element: Element) => {
-            gsap.fromTo(element, 
-                { opacity: 0, y: 50 }, 
+            gsap.fromTo(element,
+                { opacity: 0, y: 50 },
                 {
                     opacity: 1,
                     y: 0,
@@ -278,7 +278,7 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
         // Menu functionality
         const menuBtn = document.querySelector('.mil-menu-btn') as HTMLElement;
         const menuFrame = document.querySelector('.mil-menu-frame') as HTMLElement;
-        
+
         if (menuBtn && menuFrame) {
             const handleMenuClick = () => {
                 menuBtn.classList.toggle('mil-active');
@@ -293,7 +293,7 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
         hasChildrenElements.forEach((element: Element) => {
             element.addEventListener('click', (e: Event) => {
                 e.preventDefault();
-                
+
                 // Remove active class from all other menus
                 document.querySelectorAll('.mil-has-children ul').forEach((ul: Element) => {
                     ul.classList.remove('mil-active');
@@ -301,7 +301,7 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
                 document.querySelectorAll('.mil-has-children a').forEach((a: Element) => {
                     a.classList.remove('mil-active');
                 });
-                
+
                 // Toggle current menu
                 element.classList.toggle('mil-active');
                 const nextUl = element.nextElementSibling;
@@ -399,14 +399,14 @@ export const useTemplateScripts = (): UseTemplateScriptsReturn => {
         // Cleanup
         return () => {
             window.removeEventListener('scroll', handleScroll);
-            
+
             // Clean up menu event listener
             const menuBtn = document.querySelector('.mil-menu-btn') as HTMLElement;
             if (menuBtn) {
                 // Note: We can't remove the exact handler without keeping a reference
                 // This is a limitation, but the component unmounting handles cleanup
             }
-            
+
             // Kill all ScrollTrigger instances to prevent memory leaks
             if ((window as any).ScrollTrigger) {
                 (window as any).ScrollTrigger.getAll().forEach((trigger: any) => trigger.kill());
