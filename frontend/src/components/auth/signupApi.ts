@@ -8,6 +8,7 @@ interface UserData {
   username: string;
   password: string;
   password_confirm: string;
+  otp?: string;
   role: string;
   full_name?: string;
   phone_address?: string;

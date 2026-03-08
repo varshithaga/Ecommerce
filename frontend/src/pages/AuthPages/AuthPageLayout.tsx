@@ -17,10 +17,10 @@ export default function AuthLayout({
             <GridShape />
             <div className="flex flex-col items-center max-w-xs">
               <div className="block mb-4 text-3xl font-bold text-white text-center">
-               Account amanagement
+                E-Commerce
               </div>
               <p className="text-center text-gray-400 dark:text-white/60 italic mt-2">
-                "Management Of accounts"
+                "Premium E-Commerce Experience"
               </p>
             </div>
           </div>

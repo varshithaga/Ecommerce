@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
 import { useLanguage } from "../Context/LanguageContext";
-import logo from "../../assets/logo.jpg";
+import logo from "../../assets/logo.png";
 
 export default function HeaderMainPage() {
   const { language, setLanguage } = useLanguage();
@@ -112,11 +112,10 @@ export default function HeaderMainPage() {
 
       {/* Navbar (Sticky + smooth transition) */}
       <nav
-        className={` top-0 transition-all duration-500 flex justify-around items-center px-6 py-6 ${
-          isScrolled
-            ? "bg-white shadow-md translate-y-0 opacity-100 fixed w-full"
-            : "bg-transparent  opacity-90"
-        }`}
+        className={` top-0 transition-all duration-500 flex justify-around items-center px-6 py-6 ${isScrolled
+          ? "bg-white shadow-md translate-y-0 opacity-100 fixed w-full"
+          : "bg-transparent  opacity-90"
+          }`}
       >
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2 font-bold text-2xl">
@@ -125,10 +124,10 @@ export default function HeaderMainPage() {
           </span>
           <div className="flex flex-col items-center justify-center">
             <p className="text-[24px] font-bold italic text-black">
-              Account Management
+              E-Commerce
             </p>
             <p className="text-[10px] italic font-bold text-black">
-              Account Management
+              E-Commerce
             </p>
           </div>
         </div>
@@ -152,11 +151,10 @@ export default function HeaderMainPage() {
               {t.about} <FiChevronDown />
             </button>
             <ul
-              className={`absolute z-[1001] left-0 mt-9 bg-white shadow-md border-t-2 border-white rounded-b-md w-40 transition-all duration-300 transform ${
-                openDropdown === "about"
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 -translate-y-10 "
-              }`}
+              className={`absolute z-[1001] left-0 mt-9 bg-white shadow-md border-t-2 border-white rounded-b-md w-40 transition-all duration-300 transform ${openDropdown === "about"
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-10 "
+                }`}
             >
               <li>
                 <Link to="/about" className="block px-4 py-2  hover:text-blue-600">
@@ -186,11 +184,10 @@ export default function HeaderMainPage() {
               {t.services} <FiChevronDown />
             </button>
             <ul
-              className={`absolute left-0 mt-9 bg-white shadow-md rounded-b-md w-40 transition-all duration-300 transform ${
-                openDropdown === "services"
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 -translate-y-10 "
-              }`}
+              className={`absolute left-0 mt-9 bg-white shadow-md rounded-b-md w-40 transition-all duration-300 transform ${openDropdown === "services"
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-10 "
+                }`}
             >
               <li>
                 <Link to="/service" className="block px-4 py-2 hover:text-blue-600">
@@ -218,11 +215,10 @@ export default function HeaderMainPage() {
               {t.branch} <FiChevronDown />
             </button>
             <ul
-              className={`absolute left-0 mt-9 bg-white shadow-md rounded-b-md w-40 transition-all duration-300 transform ${
-                openDropdown === "branch"
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 -translate-y-10 cursor-pointer "
-              }`}
+              className={`absolute left-0 mt-9 bg-white shadow-md rounded-b-md w-40 transition-all duration-300 transform ${openDropdown === "branch"
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-10 cursor-pointer "
+                }`}
             >
               <li>
                 <Link to="/branch1" className="block px-4 py-2 hover:text-blue-600">
@@ -268,11 +264,10 @@ export default function HeaderMainPage() {
               <FiChevronDown />
             </button>
             <ul
-              className={`absolute right-0 mt-2 bg-white shadow-md rounded-lg border w-36 transition-all duration-300 transform ${
-                langOpen
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 -translate-y-2 pointer-events-none"
-              }`}
+              className={`absolute right-0 mt-2 bg-white shadow-md rounded-lg border w-36 transition-all duration-300 transform ${langOpen
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-2 pointer-events-none"
+                }`}
             >
               <li
                 className="px-4 py-2 hover:text-blue-600 cursor-pointer"

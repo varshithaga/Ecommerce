@@ -4,6 +4,7 @@ import { createApiUrl } from '../../access/access.ts';
 interface LoginCredentials {
   username: string;
   password: string;
+  otp?: string;
 }
 
 interface LoginResponse {

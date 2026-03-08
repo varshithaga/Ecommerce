@@ -4,11 +4,13 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { registerUser } from "./signupApi.ts";
 import { toast } from 'react-toastify';
+import { createApiUrl } from '../../access/access';
 
 interface CustomerFormData {
     first_name: string;
     last_name: string;
     email: string;
+    otp: string;
     phone_address: string;
     address_line: string;
     city: string;
@@ -19,12 +21,14 @@ interface CustomerFormData {
 
 export default function CustomerSignUpForm() {
     const [isLoading, setIsLoading] = useState(false);
+    const [isOtpSent, setIsOtpSent] = useState(false);
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState<CustomerFormData>({
         first_name: '',
         last_name: '',
         email: '',
+        otp: '',
         phone_address: '',
         address_line: '',
         city: '',
@@ -38,6 +42,37 @@ export default function CustomerSignUpForm() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleSendOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!formData.first_name || !formData.last_name || !formData.email) {
+            toast.error("Please fill in your Name and Email first.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await fetch(createApiUrl('api/request-otp/'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setIsOtpSent(true);
+                toast.success('OTP sent successfully to your email.');
+            } else {
+                toast.error(data.error || "Failed to send OTP.");
+            }
+        } catch (error) {
+            toast.error("Network error occurred while sending OTP.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -46,9 +81,10 @@ export default function CustomerSignUpForm() {
             !formData.last_name ||
             !formData.email ||
             !formData.address_line ||
-            !formData.city
+            !formData.city ||
+            !formData.otp
         ) {
-            toast.error("Please fill in all required fields (Name, Email, and Address)");
+            toast.error("Please fill in all required fields including OTP.");
             return;
         }
 
@@ -99,7 +135,7 @@ export default function CustomerSignUpForm() {
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={isOtpSent ? handleSubmit : handleSendOtp} className="space-y-8">
                     {/* Account Information */}
                     <div className="bg-gray-50/50 dark:bg-white/5 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 space-y-5">
                         <h3 className="text-xs font-black text-brand-500 uppercase tracking-widest px-1">1. Account Details</h3>
@@ -115,8 +151,14 @@ export default function CustomerSignUpForm() {
                         </div>
                         <div>
                             <Label>Email <span className="text-error-500">*</span></Label>
-                            <Input type="email" name="email" placeholder="john@example.com" value={formData.email} onChange={handleInputChange} />
+                            <Input type="email" name="email" placeholder="john@example.com" value={formData.email} onChange={handleInputChange} disabled={isOtpSent} />
                         </div>
+                        {isOtpSent && (
+                            <div>
+                                <Label>OTP Code <span className="text-error-500">*</span></Label>
+                                <Input type="text" name="otp" placeholder="Enter 6-digit OTP" value={formData.otp} onChange={handleInputChange} />
+                            </div>
+                        )}
                     </div>
 
                     {/* Shipping Information */}
@@ -157,7 +199,7 @@ export default function CustomerSignUpForm() {
                         disabled={isLoading}
                         className="flex items-center justify-center w-full px-6 py-4 text-sm font-black text-white uppercase tracking-tighter transition rounded-2xl bg-brand-500 hover:bg-brand-600 shadow-xl shadow-brand-100 dark:shadow-none disabled:opacity-50"
                     >
-                        {isLoading ? 'Processing...' : 'Complete Registration'}
+                        {isLoading ? 'Processing...' : (isOtpSent ? 'Complete Registration' : 'Send OTP')}
                     </button>
 
                     <p className="text-center text-sm font-bold text-gray-500">

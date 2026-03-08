@@ -4,7 +4,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import (
     User, Category, Product, ProductImage, ProductVariant, 
     ProductReview, Wishlist, Cart, CartItem, ShippingAddress, Order, OrderItem,
-    Notification, FCMDevice
+    Notification, FCMDevice, EmailOTP
 )
 
 # ===============================
@@ -18,6 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     password_confirm = serializers.CharField(write_only=True)
+    otp = serializers.CharField(write_only=True)
 
     # Optional Shipping Address Fields for Customer Registration
     phone_address = serializers.CharField(required=False, allow_blank=True)
@@ -30,17 +31,33 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'username', 'email', 'password', 'password_confirm', 'first_name', 'last_name', 'is_seller',
+            'username', 'email', 'password', 'password_confirm', 'otp', 'first_name', 'last_name', 'is_seller',
             'phone_address', 'address_line', 'city', 'state', 'postal_code', 'country'
         ]
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
+        
+        email = attrs.get('email')
+        otp = attrs.get('otp')
+        try:
+            email_otp = EmailOTP.objects.get(email=email)
+            if email_otp.otp != otp:
+                raise serializers.ValidationError({"otp": "Invalid OTP."})
+            if email_otp.is_expired():
+                raise serializers.ValidationError({"otp": "OTP has expired."})
+            
+            email_otp.verified = True
+            email_otp.save()
+        except EmailOTP.DoesNotExist:
+            raise serializers.ValidationError({"otp": "No OTP requested for this email."})
+            
         return attrs
 
     def create(self, validated_data):
         password_confirm = validated_data.pop('password_confirm')
+        otp = validated_data.pop('otp', None)
         
         # Extract address data
         address_data = {
@@ -70,6 +87,29 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['otp'] = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        otp = attrs.pop('otp', None)
+        data = super().validate(attrs)
+        
+        user = self.user
+        try:
+            email_otp = EmailOTP.objects.get(email=user.email)
+            if email_otp.otp != otp:
+                raise serializers.ValidationError({"otp": "Invalid OTP."})
+            if email_otp.is_expired():
+                raise serializers.ValidationError({"otp": "OTP has expired."})
+            
+            email_otp.verified = True
+            email_otp.save()
+        except EmailOTP.DoesNotExist:
+            raise serializers.ValidationError({"otp": "No OTP requested for this user."})
+            
+        return data
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)

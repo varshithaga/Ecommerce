@@ -4,7 +4,7 @@ from .views import (
     UserViewSet, CategoryViewSet, ProductViewSet, 
     CartViewSet, ShippingAddressViewSet, OrderViewSet,
     ProfileViewSet, RegisterView, MyTokenObtainPairView, ProductReviewViewSet,
-    WishlistViewSet, NotificationViewSet, FCMDeviceViewSet
+    WishlistViewSet, NotificationViewSet, FCMDeviceViewSet, RequestOTPView
 )
 
 router = DefaultRouter()
@@ -24,5 +24,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', MyTokenObtainPairView.as_view(), name='login'),
+    path('request-otp/', RequestOTPView.as_view(), name='request-otp'),
 ]
 

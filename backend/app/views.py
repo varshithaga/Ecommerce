@@ -4,7 +4,12 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, Count, Sum
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem, ProductReview, Notification, FCMDevice
+from rest_framework.views import APIView
+from django.utils.crypto import get_random_string
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+from .models import User, Category, Product, ProductImage, Cart, CartItem, ShippingAddress, Order, OrderItem, ProductReview, Notification, FCMDevice, EmailOTP
 from .serializers import (
     UserSerializer, CategorySerializer, ProductSerializer, 
     CartSerializer, CartItemSerializer, ShippingAddressSerializer, OrderSerializer,
@@ -133,6 +138,50 @@ class RegisterView(generics.CreateAPIView):
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
+class RequestOTPView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        username = request.data.get('username')
+
+        if not email and not username:
+            return Response({"error": "Please provide email or username"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = None
+        if username:
+            try:
+                user = User.objects.get(username=username)
+                email = user.email
+            except User.DoesNotExist:
+                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not email:
+            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        otp = get_random_string(length=6, allowed_chars='0123456789')
+        email_otp, created = EmailOTP.objects.get_or_create(email=email)
+        email_otp.otp = otp
+        email_otp.created_at = timezone.now()
+        email_otp.verified = False
+        email_otp.save()
+
+        print(f"==========================================")
+        print(f"✅ OTP for {email} is {otp}")
+        print(f"==========================================")
+
+        try:
+            send_mail(
+                'Your OTP Code',
+                f'Your OTP code is {otp}',
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@ecommerce.com'),
+                [email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Error sending email: {e}")
+
+        return Response({"message": "OTP sent successfully"})
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()

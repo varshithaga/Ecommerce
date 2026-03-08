@@ -5,17 +5,57 @@ import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 import loginUser from "./signinApi";
 import { toast } from 'react-toastify';
+import { createApiUrl } from '../../access/access';
 
 export default function CustomerSignInForm() {
     const [email, setEmail] = useState("");
+    const [otp, setOtp] = useState("");
+    const [isOtpSent, setIsOtpSent] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+
+    const handleSendOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email) {
+            toast.error("Please enter your email address to receive an OTP.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await fetch(createApiUrl('api/request-otp/'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setIsOtpSent(true);
+                toast.success('OTP sent successfully to your email.');
+            } else {
+                toast.error(data.error || "Failed to send OTP.");
+            }
+        } catch (error) {
+            toast.error("Network error occurred while sending OTP.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!email) {
             toast.error("Please enter your email address.");
+            return;
+        }
+
+        if (!otp) {
+            toast.error("Please enter the OTP.");
             return;
         }
 
@@ -26,7 +66,8 @@ export default function CustomerSignInForm() {
             // and the default password set during simplified registration.
             const result = await loginUser({
                 username: email,
-                password: "DefaultPassword123!" // Internal default for simplified customer flow
+                password: "DefaultPassword123!", // Internal default for simplified customer flow
+                otp: otp
             });
 
             if (result.success) {
@@ -55,7 +96,7 @@ export default function CustomerSignInForm() {
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={isOtpSent ? handleSubmit : handleSendOtp} className="space-y-6">
                 <div>
                     <Label>Email Address <span className="text-error-500">*</span></Label>
                     <Input
@@ -63,9 +104,23 @@ export default function CustomerSignInForm() {
                         placeholder="johndoe@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        disabled={isOtpSent}
                         className="h-14 rounded-2xl border-gray-100 focus:ring-brand-500/10"
                     />
                 </div>
+
+                {isOtpSent && (
+                    <div>
+                        <Label>OTP Code <span className="text-error-500">*</span></Label>
+                        <Input
+                            type="text"
+                            placeholder="Enter 6-digit OTP"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            className="h-14 rounded-2xl border-gray-100 focus:ring-brand-500/10"
+                        />
+                    </div>
+                )}
 
                 <div className="pt-2">
                     <Button
@@ -73,7 +128,7 @@ export default function CustomerSignInForm() {
                         type="submit"
                         disabled={isLoading}
                     >
-                        {isLoading ? 'Verifying...' : 'Continue to Shop'}
+                        {isLoading ? 'Processing...' : (isOtpSent ? 'Continue to Shop' : 'Send OTP')}
                     </Button>
                 </div>
             </form>

@@ -260,7 +260,7 @@ const MasterSidebar: React.FC = () => {
       >
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
-            <span className="font-bold text-xl text-gray-900 dark:text-white">Account Management</span>
+            <span className="font-bold text-xl text-gray-900 dark:text-white">E-Commerce</span>
           ) : (
             <span className="font-bold text-base text-gray-900 dark:text-white">KB</span>
           )}

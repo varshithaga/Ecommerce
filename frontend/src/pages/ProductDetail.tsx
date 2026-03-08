@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getProductById, Product, addToCart, getRelatedProducts } from './products/api';
+import { getProductById, Product, ProductVariant, addToCart, getRelatedProducts } from './products/api';
 import PageMeta from '../components/common/PageMeta';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Star, MessageSquare, ShieldCheck, User as UserIcon, Heart } from 'lucide-react';
+import { Star, MessageSquare, ShieldCheck, User as UserIcon, Heart, Share2, Play } from 'lucide-react';
 import { createApiUrl } from '../access/access.ts';
 
 const ProductDetail: React.FC = () => {
@@ -18,6 +18,22 @@ const ProductDetail: React.FC = () => {
     const [quantity, setQuantity] = useState(1);
     const [inWishlist, setInWishlist] = useState(false);
     const isLoggedIn = !!localStorage.getItem('access');
+
+    // New features states
+    const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+    const [showVideo, setShowVideo] = useState(false);
+    const [showStickyBar, setShowStickyBar] = useState(false);
+
+    // Zoom feature states
+    const [isZoomed, setIsZoomed] = useState(false);
+    const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - left) / width) * 100;
+        const y = ((e.clientY - top) / height) * 100;
+        setZoomPos({ x, y });
+    };
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -80,6 +96,31 @@ const ProductDetail: React.FC = () => {
         }
     };
 
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: product?.name,
+                    text: `Check out ${product?.name} on E-Shop`,
+                    url: window.location.href,
+                });
+            } catch (err) {
+                console.log('Error sharing:', err);
+            }
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success("Link copied to clipboard!");
+        }
+    };
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowStickyBar(window.scrollY > 600);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     useEffect(() => {
         if (id) {
             setLoading(true);
@@ -130,6 +171,8 @@ const ProductDetail: React.FC = () => {
         </div>
     );
 
+    const displayPrice = selectedVariant?.price || product.final_price;
+
     return (
         <div className="bg-white dark:bg-gray-950">
             <PageMeta title={`${product.name} | E-Shop`} description={product.description} />
@@ -151,32 +194,66 @@ const ProductDetail: React.FC = () => {
                     {/* Left: Image Gallery */}
                     <div className="lg:w-1/2 flex flex-col gap-6">
                         <div className="aspect-square bg-gray-50 dark:bg-gray-900 rounded-[3rem] overflow-hidden border border-gray-100 dark:border-gray-800 relative group">
-                            <img
-                                src={activeImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop'}
-                                alt={product.name}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                            />
+                            {showVideo && product.video_url ? (
+                                <iframe
+                                    src={product.video_url.includes('youtube.com') || product.video_url.includes('youtu.be') ? product.video_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/').split('&')[0] : product.video_url}
+                                    title={product.name}
+                                    className="w-full h-full border-0 absolute inset-0 z-10"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
+                            ) : (
+                                <div
+                                    className="w-full h-full relative cursor-crosshair sm:cursor-zoom-in overflow-hidden"
+                                    onMouseEnter={() => window.innerWidth >= 640 && setIsZoomed(true)} // only enable on larger screens (non-touch)
+                                    onMouseLeave={() => setIsZoomed(false)}
+                                    onMouseMove={handleMouseMove}
+                                >
+                                    <img
+                                        src={activeImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop'}
+                                        alt={product.name}
+                                        className={`w-full h-full object-cover transition-transform duration-300 ${isZoomed ? 'scale-105 opacity-0' : 'scale-100 opacity-100'}`}
+                                    />
+                                    <div
+                                        className={`absolute inset-0 pointer-events-none transition-opacity duration-200 ${isZoomed ? 'opacity-100' : 'opacity-0'}`}
+                                        style={{
+                                            backgroundImage: `url(${activeImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop'})`,
+                                            backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                                            backgroundSize: '250%',
+                                            backgroundRepeat: 'no-repeat'
+                                        }}
+                                    />
+                                </div>
+                            )}
                             {product.discount_price && (
-                                <div className="absolute top-8 left-8 bg-success-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
+                                <div className="absolute top-8 left-8 bg-success-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg z-20">
                                     Special Offer
                                 </div>
                             )}
                         </div>
 
                         {/* Thumbnails */}
-                        {product.images && product.images.length > 1 && (
+                        {(product.images && product.images.length > 1) || product.video_url ? (
                             <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                                {product.images.map((img, idx) => (
+                                {product.video_url && (
+                                    <button
+                                        onClick={() => setShowVideo(true)}
+                                        className={`w-24 h-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all flex items-center justify-center bg-gray-900 ${showVideo ? 'border-brand-500 scale-95' : 'border-gray-100 dark:border-gray-800 hover:border-brand-300'}`}
+                                    >
+                                        <Play className="w-8 h-8 text-white" />
+                                    </button>
+                                )}
+                                {product.images?.map((img, idx) => (
                                     <button
                                         key={img.id}
-                                        onClick={() => setActiveImage(img.image)}
-                                        className={`w-24 h-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${activeImage === img.image ? 'border-brand-500 scale-95' : 'border-gray-100 dark:border-gray-800 hover:border-brand-300'}`}
+                                        onClick={() => { setActiveImage(img.image); setShowVideo(false); }}
+                                        className={`w-24 h-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${!showVideo && activeImage === img.image ? 'border-brand-500 scale-95' : 'border-gray-100 dark:border-gray-800 hover:border-brand-300'}`}
                                     >
                                         <img src={img.image} alt={`${product.name} ${idx}`} className="w-full h-full object-cover" />
                                     </button>
                                 ))}
                             </div>
-                        )}
+                        ) : null}
                     </div>
 
                     {/* Right: Product Details */}
@@ -191,16 +268,25 @@ const ProductDetail: React.FC = () => {
                                 <h1 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-white leading-[1.1] uppercase tracking-tighter">
                                     {product.name}
                                 </h1>
-                                <button
-                                    onClick={handleToggleWishlist}
-                                    title="Add to Wishlist"
-                                    className={`p-3 rounded-full border-2 transition-all flex-shrink-0 ${inWishlist
-                                        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/30 text-red-500'
-                                        : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-400 hover:border-red-200 hover:text-red-500'
-                                        }`}
-                                >
-                                    <Heart className={`w-6 h-6 ${inWishlist ? 'fill-current text-red-500' : ''}`} />
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleShare}
+                                        title="Share"
+                                        className="p-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-400 hover:border-brand-200 hover:text-brand-500 rounded-full transition-all flex-shrink-0"
+                                    >
+                                        <Share2 className="w-6 h-6" />
+                                    </button>
+                                    <button
+                                        onClick={handleToggleWishlist}
+                                        title="Add to Wishlist"
+                                        className={`p-3 rounded-full border transition-all flex-shrink-0 ${inWishlist
+                                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/30 text-red-500'
+                                            : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-400 hover:border-red-200 hover:text-red-500'
+                                            }`}
+                                    >
+                                        <Heart className={`w-6 h-6 ${inWishlist ? 'fill-current text-red-500' : ''}`} />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-4 mb-6">
@@ -215,7 +301,7 @@ const ProductDetail: React.FC = () => {
 
                             <div className="flex items-baseline gap-4 mb-8">
                                 <span className="text-5xl font-black text-gray-900 dark:text-white tracking-tighter">
-                                    ${product.final_price}
+                                    ${displayPrice}
                                 </span>
                                 {product.discount_price && (
                                     <>
@@ -226,6 +312,27 @@ const ProductDetail: React.FC = () => {
                                     </>
                                 )}
                             </div>
+
+                            {/* Variants Selector */}
+                            {product.variants && product.variants.length > 0 && (
+                                <div className="mb-8">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Select Variant</h3>
+                                    <div className="flex flex-wrap gap-3">
+                                        {product.variants.map((variant) => (
+                                            <button
+                                                key={variant.id}
+                                                onClick={() => setSelectedVariant(variant)}
+                                                className={`px-5 py-3 rounded-2xl border-2 text-sm font-bold transition-all ${selectedVariant?.id === variant.id
+                                                    ? 'border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 shadow-lg shadow-brand-500/20'
+                                                    : 'border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-brand-200 dark:hover:border-gray-700'
+                                                    }`}
+                                            >
+                                                {variant.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Offers & Info */}
@@ -587,6 +694,29 @@ const ProductDetail: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Sticky Add to Bag Bar */}
+            <div className={`fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 p-4 transform transition-transform duration-500 z-50 ${showStickyBar ? 'translate-y-0' : 'translate-y-full'}`}>
+                <div className="container mx-auto px-4 flex items-center justify-between gap-4">
+                    <div className="hidden sm:flex items-center gap-4">
+                        {activeImage && <img src={activeImage} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />}
+                        <div>
+                            <h4 className="text-sm font-black text-gray-900 dark:text-white line-clamp-1">{product.name}</h4>
+                            <p className="text-xs font-bold text-brand-500">${displayPrice}</p>
+                        </div>
+                    </div>
+                    <div className="flex-1 sm:flex-none flex items-center gap-4 justify-end">
+                        <div className="text-xl font-black text-gray-900 dark:text-white sm:hidden">${displayPrice}</div>
+                        <button
+                            onClick={handleAddToCart}
+                            disabled={addingToCart || product.stock === 0}
+                            className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-black uppercase tracking-widest rounded-xl hover:bg-brand-500 hover:text-white transition-all shadow-xl shadow-gray-200 dark:shadow-none translate-y-0 active:translate-y-1 disabled:opacity-50"
+                        >
+                            {addingToCart ? 'Adding...' : 'Add to Bag'}
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <ToastContainer position="bottom-right" theme="dark" />
         </div>
