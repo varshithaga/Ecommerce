@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 const SignIn = lazy(() => import("./pages/AuthPages/SignIn"));
 const SignUp = lazy(() => import("./pages/AuthPages/SignUp"));
+const ForgotPassword = lazy(() => import("./pages/AuthPages/ForgotPassword"));
 const MasterDashboard = lazy(() => import("./pages/Dashboard/index"));
 const NotFound = lazy(() => import("./pages/OtherPage/NotFound"));
 const UserProfiles = lazy(() => import("./pages/UserProfiles"));
@@ -98,6 +99,7 @@ export function appRoutes() {
         <Route path="/seller-login" element={<SellerSignIn />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/resetpassword" element={<ForgotPassword />} />
 
         {/* Fallback Route */}
         <Route path="*" element={<NotFound />} />

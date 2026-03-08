@@ -10,6 +10,7 @@ import { createApiUrl } from '../../access/access';
 export default function CustomerSignInForm() {
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
     const [isOtpSent, setIsOtpSent] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
@@ -67,7 +68,8 @@ export default function CustomerSignInForm() {
             const result = await loginUser({
                 username: email,
                 password: "DefaultPassword123!", // Internal default for simplified customer flow
-                otp: otp
+                otp: otp,
+                rememberMe: rememberMe
             });
 
             if (result.success) {
@@ -121,6 +123,21 @@ export default function CustomerSignInForm() {
                         />
                     </div>
                 )}
+
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            id="rememberMe"
+                            className="w-5 h-5 text-brand-500 border-gray-300 rounded focus:ring-brand-500"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                        />
+                        <Label htmlFor="rememberMe" className="cursor-pointer mb-0">
+                            Remember me
+                        </Label>
+                    </div>
+                </div>
 
                 <div className="pt-2">
                     <Button

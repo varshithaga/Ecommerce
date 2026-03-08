@@ -5,6 +5,7 @@ interface LoginCredentials {
   username: string;
   password: string;
   otp?: string;
+  rememberMe?: boolean;
 }
 
 interface LoginResponse {
@@ -29,8 +30,18 @@ const loginUser = async (credentials: LoginCredentials): Promise<LoginResponse> 
     const data = await response.json();
 
     if (response.ok && data.access) {
-      localStorage.setItem('access', data.access);
-      localStorage.setItem('refresh', data.refresh);
+      if (credentials.rememberMe) {
+        localStorage.setItem('access', data.access);
+        localStorage.setItem('refresh', data.refresh);
+      } else {
+        // If not remember me, we use sessionStorage so it clears on tab close
+        sessionStorage.setItem('access', data.access);
+        sessionStorage.setItem('refresh', data.refresh);
+        // Clear old localStorage if it exists so there's no conflict
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+      }
+
       const userRole = jwtDecode<{ role: string }>(data.access).role;
 
       return {

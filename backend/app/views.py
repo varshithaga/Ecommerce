@@ -183,6 +183,82 @@ class RequestOTPView(APIView):
 
         return Response({"message": "OTP sent successfully"})
 
+class VerifyOTPView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        otp_input = request.data.get('otp')
+
+        try:
+            otp_obj = EmailOTP.objects.get(email=email)
+
+            if otp_obj.is_expired():
+                return Response({'error': 'OTP expired'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if otp_obj.otp == otp_input:
+                otp_obj.verified = True  
+                otp_obj.save()
+                return Response({'message': 'OTP verified successfully'})
+            else:
+                return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+
+        except EmailOTP.DoesNotExist:
+            return Response({'error': 'OTP not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class ResetPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email_or_mobile = request.data.get("email") # Client sends it as 'email'
+        new_password = request.data.get("new_password")
+        confirm_password = request.data.get("confirm_password")
+
+        if not all([email_or_mobile, new_password, confirm_password]):
+            return Response({"error": "All fields are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password != confirm_password:
+            return Response({"error": "Passwords do not match."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ===============================
+        #    OTP CHECK
+        # ===============================
+        try:
+            otp_obj = EmailOTP.objects.get(email=email_or_mobile)
+            if not otp_obj.verified:
+                return Response({"error": "OTP not verified for this email."}, status=status.HTTP_400_BAD_REQUEST)
+        except EmailOTP.DoesNotExist:
+            return Response({"error": "OTP not found. Please verify OTP first."}, status=status.HTTP_404_NOT_FOUND)
+
+        # ===============================
+        #   USER LOOKUP PRIORITY
+        # ===============================
+        user = User.objects.filter(email=email_or_mobile).first()
+        
+        # 3️⃣ if not found → user phone number
+        if not user:
+            user = User.objects.filter(phone=email_or_mobile).first()
+            
+        # 4️⃣ if not found → username
+        if not user:
+            user = User.objects.filter(username=email_or_mobile).first()
+
+        if not user:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # ===============================
+        #   UPDATE PASSWORD
+        # ===============================
+        user.set_password(new_password)
+        user.save()
+
+        # Reset OTP flag
+        otp_obj.verified = False
+        otp_obj.save()
+
+        return Response({"message": "Password reset successful."})
+
+
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer

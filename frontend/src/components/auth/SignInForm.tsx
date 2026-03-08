@@ -15,6 +15,7 @@ export default function SignInForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -71,7 +72,8 @@ export default function SignInForm() {
       const result = await loginUser({
         username: username,
         password: password,
-        otp: otp
+        otp: otp,
+        rememberMe: rememberMe
       });
 
       if (result.success) {
@@ -227,6 +229,18 @@ export default function SignInForm() {
                 )}
 
                 <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      className="w-5 h-5 text-brand-500 border-gray-300 rounded focus:ring-brand-500"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                    <Label htmlFor="rememberMe" className="cursor-pointer mb-0">
+                      Remember me
+                    </Label>
+                  </div>
                   <Link
                     to="/resetpassword"
                     className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"

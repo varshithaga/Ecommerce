@@ -4,7 +4,7 @@ from .views import (
     UserViewSet, CategoryViewSet, ProductViewSet, 
     CartViewSet, ShippingAddressViewSet, OrderViewSet,
     ProfileViewSet, RegisterView, MyTokenObtainPairView, ProductReviewViewSet,
-    WishlistViewSet, NotificationViewSet, FCMDeviceViewSet, RequestOTPView
+    WishlistViewSet, NotificationViewSet, FCMDeviceViewSet, RequestOTPView, VerifyOTPView, ResetPasswordView
 )
 
 router = DefaultRouter()
@@ -25,5 +25,8 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', MyTokenObtainPairView.as_view(), name='login'),
     path('request-otp/', RequestOTPView.as_view(), name='request-otp'),
+    path('sendotp/', RequestOTPView.as_view(), name='send-otp'), # Alias for the frontend
+    path('verifyotp/', VerifyOTPView.as_view(), name='verify-otp'),
+    path('resetpassword/', ResetPasswordView.as_view(), name='reset-password'),
 ]
 
