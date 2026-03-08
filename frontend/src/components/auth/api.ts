@@ -1,9 +1,10 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { createApiUrl } from "../../access/access";
 
 // 👉 Create an axios instance
 export const axiosInstance = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: createApiUrl("api"),
 });
 
 // 👉 Attach access token automatically
@@ -26,7 +27,7 @@ axiosInstance.interceptors.request.use(
     const refreshToken = localStorage.getItem("refresh_token");
     if (token && isTokenExpired(token) && refreshToken) {
       try {
-        const response = await axios.post("http://127.0.0.1:8000/api/token/refresh/", {
+        const response = await axios.post(createApiUrl("api/token/refresh/"), {
           refresh: refreshToken,
         });
         token = response.data.access;
@@ -61,7 +62,7 @@ axiosInstance.interceptors.response.use(
       try {
         // Get new access token
         const refreshResponse = await axios.post(
-          "http://127.0.0.1:8000/api/token/refresh/",
+          createApiUrl("api/token/refresh/"),
           { refresh: localStorage.getItem("refresh_token") }
         );
 
@@ -88,8 +89,6 @@ axiosInstance.interceptors.response.use(
 );
 
 
-
-import { createApiUrl } from "../../access/access";
 
 // Types for the forgot password API
 interface OtpResponse {

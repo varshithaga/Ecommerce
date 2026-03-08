@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { getProducts, Product } from "../../pages/products/api";
 import {
   FaFacebookF,
   FaTwitter,
@@ -18,6 +19,54 @@ export default function HeaderMainPage() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [langOpen, setLangOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Search State
+  const navigate = useNavigate();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Close search when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Debounced Search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          // Send request with search query
+          const res = await getProducts(searchQuery, 1);
+          setSearchResults(res.results.slice(0, 5)); // show top 5 max
+        } catch (error) {
+          console.error("Search error", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      setIsSearchOpen(false);
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   // ✅ detect scroll
   useEffect(() => {
@@ -250,9 +299,71 @@ export default function HeaderMainPage() {
 
         {/* Right side actions */}
         <div className="flex items-center space-x-4 relative">
-          <button className="p-2 hover:text-blue-600">
-            <FaSearch />
-          </button>
+
+          {/* Live Global Search Dropdown */}
+          <div className="relative flex flex-col items-center" ref={searchRef}>
+            <button
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="p-2 hover:text-blue-600 transition-colors"
+            >
+              <FaSearch />
+            </button>
+
+            {/* Expanding Input + Results */}
+            {isSearchOpen && (
+              <div className="absolute right-0 top-full mt-6 w-72 md:w-96 bg-white shadow-xl border border-gray-100 rounded-xl overflow-hidden z-[1002]">
+                <div className="p-3 border-b flex items-center gap-3">
+                  <FaSearch className="text-gray-400" />
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Search products..."
+                    className="w-full outline-none text-sm text-gray-700 bg-transparent"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearchSubmit}
+                  />
+                  {isSearching && <div className="animate-spin h-4 w-4 border-2 border-blue-600 rounded-full border-t-transparent"></div>}
+                </div>
+
+                {searchResults.length > 0 && (
+                  <div className="max-h-[60vh] overflow-y-auto">
+                    {searchResults.map((product) => (
+                      <Link
+                        key={product.id}
+                        to={`/product/${product.id}`}
+                        onClick={() => setIsSearchOpen(false)}
+                        className="flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors border-b last:border-0"
+                      >
+                        <img
+                          src={product.images?.[0]?.image || `https://via.placeholder.com/40`}
+                          className="w-12 h-12 object-cover rounded-md"
+                          alt={product.name}
+                        />
+                        <div className="flex-1">
+                          <h4 className="text-sm font-bold text-gray-800 line-clamp-1">{product.name}</h4>
+                          <span className="text-xs font-bold text-blue-600">${product.final_price}</span>
+                        </div>
+                      </Link>
+                    ))}
+                    <Link
+                      to={`/products?search=${encodeURIComponent(searchQuery.trim())}`}
+                      onClick={() => setIsSearchOpen(false)}
+                      className="block p-3 text-center text-xs font-bold uppercase tracking-widest text-blue-600 hover:bg-blue-50 transition-colors"
+                    >
+                      View all results
+                    </Link>
+                  </div>
+                )}
+
+                {searchQuery.trim().length >= 2 && searchResults.length === 0 && !isSearching && (
+                  <div className="p-6 text-center text-gray-500 text-sm">
+                    No products found for "{searchQuery}"
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Language Dropdown */}
           <div className="relative">

@@ -127,7 +127,8 @@ export const getProducts = async (
     category: string = "",
     minPrice?: number,
     maxPrice?: number,
-    sort?: string
+    sort?: string,
+    minRating?: number
 ): Promise<PaginatedProductResponse> => {
     const url = new URL(createApiUrl('api/products/'));
     if (search) url.searchParams.append('search', search);
@@ -135,6 +136,7 @@ export const getProducts = async (
     if (minPrice) url.searchParams.append('min_price', minPrice.toString());
     if (maxPrice) url.searchParams.append('max_price', maxPrice.toString());
     if (sort) url.searchParams.append('sort', sort);
+    if (minRating) url.searchParams.append('min_rating', minRating.toString());
     url.searchParams.append('page', page.toString());
 
     const response = await fetch(url.toString());

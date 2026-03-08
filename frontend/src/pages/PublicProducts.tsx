@@ -25,14 +25,16 @@ const PublicProducts: React.FC = () => {
     const categorySlug = query.get('category') || "";
     const searchQuery = query.get('search') || "";
 
-    const [maxPrice, setMaxPrice] = useState<number>(1000);
+    const [minPrice, setMinPrice] = useState<number>(0);
+    const [maxPrice, setMaxPrice] = useState<number>(5000);
     const [sortOption, setSortOption] = useState<string>('newest');
+    const [minRating, setMinRating] = useState<number>(0);
 
     const fetchInitialData = useCallback(async () => {
         setInitialLoading(true);
         try {
             const [prodData, catData] = await Promise.all([
-                getProducts(searchQuery, 1, categorySlug, 0, maxPrice, sortOption),
+                getProducts(searchQuery, 1, categorySlug, minPrice, maxPrice, sortOption, minRating),
                 getCategories()
             ]);
             setProducts(prodData.results);
@@ -45,7 +47,7 @@ const PublicProducts: React.FC = () => {
         } finally {
             setInitialLoading(false);
         }
-    }, [categorySlug, searchQuery, maxPrice, sortOption]);
+    }, [categorySlug, searchQuery, minPrice, maxPrice, sortOption, minRating]);
 
     const fetchMoreProducts = useCallback(async () => {
         if (loading || !hasMore) return;
@@ -53,7 +55,7 @@ const PublicProducts: React.FC = () => {
         setLoading(true);
         try {
             const nextPage = page + 1;
-            const data: PaginatedProductResponse = await getProducts(searchQuery, nextPage, categorySlug, 0, maxPrice, sortOption);
+            const data: PaginatedProductResponse = await getProducts(searchQuery, nextPage, categorySlug, minPrice, maxPrice, sortOption, minRating);
             setProducts(prev => [...prev, ...data.results]);
             setHasMore(data.next !== null);
             setPage(nextPage);
@@ -62,7 +64,7 @@ const PublicProducts: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [page, hasMore, loading, categorySlug, searchQuery, maxPrice, sortOption]);
+    }, [page, hasMore, loading, categorySlug, searchQuery, minPrice, maxPrice, sortOption, minRating]);
 
     useEffect(() => {
         fetchInitialData();
@@ -135,21 +137,61 @@ const PublicProducts: React.FC = () => {
                         </div>
 
                         <div>
-                            <h2 className="text-xl font-black text-gray-900 dark:text-white mb-8 uppercase tracking-widest">Max Price</h2>
+                            <h2 className="text-xl font-black text-gray-900 dark:text-white mb-8 uppercase tracking-widest">Price Range</h2>
                             <div className="space-y-6">
-                                <input
-                                    type="range"
-                                    className="w-full accent-brand-500"
-                                    min="0"
-                                    max="5000"
-                                    step="50"
-                                    value={maxPrice}
-                                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                                />
-                                <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                                    <span>$0</span>
-                                    <span className="text-brand-500">${maxPrice}</span>
+                                <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
+                                    <span>${minPrice}</span>
+                                    <span>${maxPrice}</span>
                                 </div>
+                                <div className="flex gap-4">
+                                    <input
+                                        type="number"
+                                        placeholder="Min"
+                                        value={minPrice}
+                                        onChange={(e) => setMinPrice(Number(e.target.value))}
+                                        className="w-1/2 bg-gray-50 dark:bg-gray-800 border-none rounded-xl px-4 py-3 text-sm font-bold text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-brand-500"
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Max"
+                                        value={maxPrice}
+                                        onChange={(e) => setMaxPrice(Number(e.target.value))}
+                                        className="w-1/2 bg-gray-50 dark:bg-gray-800 border-none rounded-xl px-4 py-3 text-sm font-bold text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-brand-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 className="text-xl font-black text-gray-900 dark:text-white mb-8 uppercase tracking-widest">Customer Rating</h2>
+                            <div className="flex flex-col gap-3">
+                                {[4, 3, 2, 1].map((rating) => (
+                                    <label key={rating} className="flex items-center gap-3 cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            name="rating"
+                                            checked={minRating === rating}
+                                            onChange={() => setMinRating(rating)}
+                                            className="w-5 h-5 text-brand-500 bg-gray-100 border-gray-300 focus:ring-brand-500 focus:ring-2 cursor-pointer"
+                                        />
+                                        <div className="flex text-yellow-400 text-sm">
+                                            {Array.from({ length: 5 }).map((_, i) => (
+                                                <span key={i} className={i < rating ? "text-yellow-400" : "text-gray-300"}>★</span>
+                                            ))}
+                                        </div>
+                                        <span className="text-sm font-bold text-gray-600 dark:text-gray-400 group-hover:text-brand-500 transition-colors">& Up</span>
+                                    </label>
+                                ))}
+                                <label className="flex items-center gap-3 cursor-pointer group mt-2">
+                                    <input
+                                        type="radio"
+                                        name="rating"
+                                        checked={minRating === 0}
+                                        onChange={() => setMinRating(0)}
+                                        className="w-5 h-5 text-brand-500 bg-gray-100 border-gray-300 focus:ring-brand-500 focus:ring-2 cursor-pointer"
+                                    />
+                                    <span className="text-sm font-bold text-gray-600 dark:text-gray-400 group-hover:text-brand-500 transition-colors">Any Rating</span>
+                                </label>
                             </div>
                         </div>
 

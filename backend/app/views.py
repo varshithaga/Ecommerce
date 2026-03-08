@@ -290,6 +290,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         max_price = self.request.query_params.get("max_price")
         brand = self.request.query_params.get("brand")
         sort = self.request.query_params.get("sort")
+        min_rating = self.request.query_params.get("min_rating")
 
         if category and category.lower() != "all":
             if category.isdigit():
@@ -314,6 +315,8 @@ class ProductViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(price__lte=max_price)
         if brand:
             queryset = queryset.filter(brand__name__icontains=brand)
+        if min_rating:
+            queryset = queryset.filter(average_rating__gte=min_rating)
 
         if sort == 'price_asc':
             return queryset.order_by('price')
