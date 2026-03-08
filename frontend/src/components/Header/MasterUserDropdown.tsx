@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link } from "react-router-dom";
 import { axiosInstance } from "../../pages/Dashboard/api";
-import {getUserProfile} from "../../pages/profile/api";
+import { getUserProfile } from "../../pages/profile/api";
 
 interface UserProfile {
   username: string;
   email: string;
-  first_name:string;
-  last_name:string;
+  first_name: string;
+  last_name: string;
 }
 export default function MasterUserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,8 +17,8 @@ export default function MasterUserDropdown() {
   const [userProfile, setUserProfile] = useState<UserProfile>({
     username: '',
     email: '',
-    first_name:'',
-    last_name:''
+    first_name: '',
+    last_name: ''
   });
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function MasterUserDropdown() {
           first_name: latestProfile.first_name || '',
           username: latestProfile.username || 'User',
           email: latestProfile.email || '',
-          last_name:latestProfile.last_name || '',
+          last_name: latestProfile.last_name || '',
         });
       } catch (error) {
         console.error('Failed to load user profile:', error);
@@ -102,7 +102,7 @@ export default function MasterUserDropdown() {
               fill=""
             />
           </svg>
-          Sign outtt
+          Sign out
         </Link>
       </Dropdown>
     </div>

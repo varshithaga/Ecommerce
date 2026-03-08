@@ -8,13 +8,47 @@ import Button from "../ui/button/Button";
 import loginUser from "./signinApi";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { createApiUrl } from '../../access/access';
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username || !password) {
+      toast.error("Please enter both username and password to proceed.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(createApiUrl('api/request-otp/'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsOtpSent(true);
+        toast.success('OTP sent successfully to your registered email.');
+      } else {
+        toast.error(data.error || "Failed to send OTP.");
+      }
+    } catch (error) {
+      toast.error("Network error occurred while sending OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -26,12 +60,18 @@ export default function SignInForm() {
       return;
     }
 
+    if (!otp) {
+      toast.error("Please enter the OTP.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const result = await loginUser({
         username: username,
-        password: password
+        password: password,
+        otp: otp
       });
 
       if (result.success) {
@@ -137,7 +177,7 @@ export default function SignInForm() {
                 </span>
               </div>
             </div> */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={isOtpSent ? handleSubmit : handleSendOtp}>
               <div className="space-y-6">
                 <div>
                   <Label>
@@ -147,6 +187,7 @@ export default function SignInForm() {
                     placeholder="Enter your username"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
+                    disabled={isOtpSent}
                   />
                 </div>
                 <div>
@@ -172,6 +213,19 @@ export default function SignInForm() {
                     </span>
                   </div>
                 </div>
+
+                {isOtpSent && (
+                  <div>
+                    <Label>OTP Code <span className="text-error-500">*</span></Label>
+                    <Input
+                      type="text"
+                      placeholder="Enter 6-digit OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                    />
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <Link
                     to="/resetpassword"
@@ -187,7 +241,7 @@ export default function SignInForm() {
                     type="submit"
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Signing In...' : 'Sign in'}
+                    {isLoading ? 'Processing...' : (isOtpSent ? 'Sign in' : 'Send OTP')}
                   </Button>
                 </div>
               </div>

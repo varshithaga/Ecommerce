@@ -6,6 +6,7 @@ import Input from "../form/input/InputField";
 import { registerUser } from "./signupApi.ts";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { createApiUrl } from '../../access/access';
 
 // Form data interface
 interface FormData {
@@ -15,6 +16,7 @@ interface FormData {
   username: string;
   password: string;
   password_confirm: string;
+  otp: string;
   is_seller: boolean;
 }
 
@@ -28,8 +30,11 @@ export default function SignUpForm() {
     username: '',
     password: '',
     password_confirm: '',
+    otp: '',
     is_seller: false
   });
+
+  const [isOtpSent, setIsOtpSent] = useState(false);
 
   const [passwordsMatch, setPasswordsMatch] = useState(true);
   const [showPasswordError, setShowPasswordError] = useState(false);
@@ -59,6 +64,42 @@ export default function SignUpForm() {
     }
   };
 
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.first_name || !formData.last_name || !formData.email || !formData.username) {
+      toast.error("Please fill in your Name, Email, and Username first.");
+      return;
+    }
+
+    if (!passwordsMatch || formData.password !== formData.password_confirm || formData.password.length < 8) {
+      toast.error("Please ensure your passwords match and are at least 8 characters long.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(createApiUrl('api/request-otp/'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsOtpSent(true);
+        toast.success('OTP sent successfully to your email.');
+      } else {
+        toast.error(data.error || "Failed to send OTP.");
+      }
+    } catch (error) {
+      toast.error("Network error occurred while sending OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -73,9 +114,10 @@ export default function SignUpForm() {
       !formData.email ||
       !formData.username ||
       !formData.password ||
-      !formData.password_confirm
+      !formData.password_confirm ||
+      !formData.otp
     ) {
-      toast.error("Please fill in all required fields");
+      toast.error("Please fill in all required fields including OTP.");
       return;
     }
 
@@ -101,6 +143,7 @@ export default function SignUpForm() {
           username: "",
           password: "",
           password_confirm: "",
+          otp: "",
           is_seller: false
         });
       } else {
@@ -147,7 +190,7 @@ export default function SignUpForm() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={isOtpSent ? handleSubmit : handleSendOtp}>
             <div className="space-y-5">
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
@@ -180,6 +223,7 @@ export default function SignUpForm() {
                   placeholder="john@example.com"
                   value={formData.email}
                   onChange={handleInputChange}
+                  disabled={isOtpSent}
                 />
               </div>
 
@@ -227,6 +271,19 @@ export default function SignUpForm() {
                 {passwordsMatch && formData.password_confirm.length > 0 && <p className="mt-1 text-sm text-green-500">Passwords match ✓</p>}
               </div>
 
+              {isOtpSent && (
+                <div>
+                  <Label>OTP Code<span className="text-error-500">*</span></Label>
+                  <Input
+                    type="text"
+                    name="otp"
+                    placeholder="Enter 6-digit OTP"
+                    value={formData.otp}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              )}
+
               <div className="flex items-center gap-3 p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-gray-50/50 dark:bg-white/5">
                 <input
                   type="checkbox"
@@ -252,7 +309,7 @@ export default function SignUpForm() {
                   disabled={isLoading}
                   className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-xl bg-brand-500 hover:bg-brand-600 disabled:opacity-50"
                 >
-                  {isLoading ? 'Signing Up...' : 'Sign Up'}
+                  {isLoading ? 'Processing...' : (isOtpSent ? 'Sign Up' : 'Send OTP')}
                 </button>
               </div>
             </div>
@@ -261,7 +318,7 @@ export default function SignUpForm() {
           <div className="mt-6 text-center">
             <p className="text-sm font-normal text-gray-700 dark:text-gray-400">
               Already have an account? {""}
-              <Link to="/" className="text-brand-500 font-bold hover:text-brand-600 dark:text-brand-400">
+              <Link to="/signin" className="text-brand-500 font-bold hover:text-brand-600 dark:text-brand-400">
                 Sign In
               </Link>
             </p>
